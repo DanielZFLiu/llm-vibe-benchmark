@@ -1,0 +1,25 @@
+{
+  "name": "llm-vibe-benchmark",
+  "version": "1.0.0",
+  "description": "An extensible TypeScript evaluation framework that assesses LLMs on a vibe basis",
+  "main": "dist/index.js",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "generate": "node dist/index.js generate",
+    "evaluate": "node dist/index.js evaluate",
+    "report": "node dist/index.js report",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@openrouter/sdk": "^0.1.0",
+    "zod": "^3.24.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.19.12",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.18"
+  }
+}

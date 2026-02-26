@@ -1,0 +1,69 @@
+import { readFileSync, existsSync } from "fs";
+import { resolve } from "path";
+import {
+    BenchmarkConfigSchema,
+    TaskCriteriaSchema,
+    DEFAULT_CRITERIA,
+    type BenchmarkConfig,
+    type Criterion,
+} from "./schemas.js";
+
+const CONFIG_FILENAME = "benchmark.config.json";
+
+export function loadConfig(rootDir: string): BenchmarkConfig {
+    const configPath = resolve(rootDir, CONFIG_FILENAME);
+
+    if (!existsSync(configPath)) {
+        throw new Error(`Config file not found: ${configPath}`);
+    }
+
+    const raw = JSON.parse(readFileSync(configPath, "utf-8"));
+    const result = BenchmarkConfigSchema.safeParse(raw);
+
+    if (!result.success) {
+        throw new Error(
+            `Invalid config in ${CONFIG_FILENAME}:\n${result.error.issues.map((i) => `  - ${i.path.join(".")}: ${i.message}`).join("\n")}`,
+        );
+    }
+
+    return result.data;
+}
+
+export function getApiKey(): string {
+    const key = process.env.OPENROUTER_API_KEY;
+    if (!key) {
+        throw new Error(
+            "OPENROUTER_API_KEY environment variable is not set. See .env.example.",
+        );
+    }
+    return key;
+}
+
+export function loadTaskCriteria(taskDir: string): Criterion[] {
+    const criteriaPath = resolve(taskDir, "criteria.json");
+
+    if (!existsSync(criteriaPath)) {
+        return DEFAULT_CRITERIA;
+    }
+
+    let raw: unknown;
+    try {
+        raw = JSON.parse(readFileSync(criteriaPath, "utf-8"));
+    } catch {
+        console.warn(
+            `Malformed JSON in ${criteriaPath}, falling back to defaults.`,
+        );
+        return DEFAULT_CRITERIA;
+    }
+
+    const result = TaskCriteriaSchema.safeParse(raw);
+
+    if (!result.success) {
+        console.warn(
+            `Invalid criteria.json in ${taskDir}, falling back to defaults:\n${result.error.issues.map((i) => `  - ${i.path.join(".")}: ${i.message}`).join("\n")}`,
+        );
+        return DEFAULT_CRITERIA;
+    }
+
+    return result.data.criteria;
+}
