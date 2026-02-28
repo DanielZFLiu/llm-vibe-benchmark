@@ -1,0 +1,12 @@
+{
+  "judge": "google/gemini-3.1-pro-preview",
+  "reasoning": "The response perfectly addresses the prompt's requirements with exceptional depth, clarity, and precision. \n\n1. **Encryption Soundness (95/100)**: The design correctly utilizes the Signal Protocol (X3DH + Double Ratchet), detailing long-term, medium-term, and ephemeral keys. Forward secrecy is guaranteed. Group messaging intelligently uses Sender Keys with rotation upon membership structural changes. The single-device limitation via a BIP39 seed is an excellent, practical trade-off for the self-hosted constraint.\n\n2. **Architecture Fitness (95/100)**: The architecture is wonderfully sized for the constraint of 1,000 users. Choosing a single VPS with Go, PostgreSQL, Redis, and Caddy completely bypasses the trap of over-engineering (no Kubernetes or microservices). The ASCII diagram is clear, and the justifications tie directly back to operational simplicity.\n\n3. **Invite System Design (95/100)**: The invite lifecycle leverages client-side generation, a hashed commit to the server signed by the inviter's Identity Key, and out-of-band delivery. This prevents server forgery and hides the invitee's identity prior to joining. The closure table for the audit trail and the handling of member removal cascades are perfectly specified.\n\n4. **Security Model (95/100)**: The threat model strictly enumerates what an honest-but-curious server operator can see (metadata, social graph) and cannot see (content, private keys). The blast radius of database exfiltration and single-device compromise are explicitly correctly modeled.\n\n5. **Self-Hosting Practicality (95/100)**: The inclusion of a realistic Docker Compose file, an explicit list of external dependencies (e.g., calling out that SMTP is unnecessary), and a disaster recovery / backup plan (using `pg_dump` and `rclone`) proves the system is deployable by an amateur admin. UptimeKuma and basic endpoint health checks perfectly fit the target persona.\n\n6. **Design Depth and Precision (95/100)**: Every designated section is addressed deeply. Explicit trade-offs are repeatedly called out. The data schema explicitly partitions plaintext server fields from opaque/encrypted blobs, and the WebSocket payload routing (including offline message sync and ephemeral handling) is thoughtfully outlined.",
+  "scores": {
+    "encryption_soundness": 95,
+    "architecture_fitness": 95,
+    "invite_system_design": 95,
+    "security_model": 95,
+    "self_hosting_practicality": 95,
+    "design_depth_and_precision": 95
+  }
+}

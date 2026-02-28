@@ -1,3 +1,4 @@
+import "dotenv/config";
 import { resolve } from "path";
 import { loadConfig } from "./config.js";
 import { generate } from "./generator.js";

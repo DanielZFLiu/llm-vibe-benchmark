@@ -1,0 +1,12 @@
+{
+  "judge": "openai/gpt-5.3-codex",
+  "reasoning": "Overall, this is a strong and mostly practical design document that covers all seven required sections with concrete choices and explicit trade-offs. Architecture is right-sized for a 1k-user self-hosted system (Go + Postgres + Redis + WebSockets + Docker Compose), and the operational story is realistic for a competent non-specialist. The threat model is one of the better parts: it clearly distinguishes metadata visibility from content confidentiality and discusses DB theft, compromised devices, and invite abuse limits.\n\nMain weaknesses are in cryptographic precision and some invite details. The encryption section references X3DH + Double Ratchet (good), but it also introduces a conflicting simplification ('lazy ratchet' and reduced pre-key complexity) without fully specifying a correct handshake/state machine. Group encryption via sender keys is plausible, but critical lifecycle details are missing (especially sender key rotation on member add/remove, handling removed members, authenticity semantics). Key restore is addressed, but server-backed encrypted key backup introduces password-strength risk and is only partially mitigated.\n\nInvite design is functional (token generation, one-time use, chain audit fields, revocation controls, rate limiting/replay prevention), but some statements are inconsistent (server supposedly not knowing inviter pre-join, yet inviter is stored with invite records). Abuse controls are present but not comprehensive (e.g., no strict expiry/device binding or robust anti-transfer enforcement). Data model and realtime protocol are solid and actionable, though some schema choices (JSONB members array) are less ideal than normalized membership tables.\n\nIn summary: very good practical system design with meaningful depth, but not top-tier due to cryptographic and invite-model inconsistencies.",
+  "scores": {
+    "encryption_soundness": 72,
+    "architecture_fitness": 88,
+    "invite_system_design": 74,
+    "security_model": 86,
+    "self_hosting_practicality": 78,
+    "design_depth_and_precision": 82
+  }
+}

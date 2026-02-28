@@ -1,0 +1,62 @@
+[
+  {
+    "model": "stepfun",
+    "avgScore": 91.72222222222221,
+    "stdDev": 0,
+    "bestTask": "secret_society_chat",
+    "worstTask": "secret_society_chat",
+    "taskScores": {
+      "secret_society_chat": 91.72222222222221
+    }
+  },
+  {
+    "model": "moonshotai",
+    "avgScore": 91.22222222222223,
+    "stdDev": 0,
+    "bestTask": "secret_society_chat",
+    "worstTask": "secret_society_chat",
+    "taskScores": {
+      "secret_society_chat": 91.22222222222223
+    }
+  },
+  {
+    "model": "qwen",
+    "avgScore": 88.44444444444444,
+    "stdDev": 0,
+    "bestTask": "secret_society_chat",
+    "worstTask": "secret_society_chat",
+    "taskScores": {
+      "secret_society_chat": 88.44444444444444
+    }
+  },
+  {
+    "model": "deepseek",
+    "avgScore": 87.77777777777777,
+    "stdDev": 0,
+    "bestTask": "secret_society_chat",
+    "worstTask": "secret_society_chat",
+    "taskScores": {
+      "secret_society_chat": 87.77777777777777
+    }
+  },
+  {
+    "model": "z-ai",
+    "avgScore": 85.33333333333333,
+    "stdDev": 0,
+    "bestTask": "secret_society_chat",
+    "worstTask": "secret_society_chat",
+    "taskScores": {
+      "secret_society_chat": 85.33333333333333
+    }
+  },
+  {
+    "model": "minimax",
+    "avgScore": 79.66666666666667,
+    "stdDev": 0,
+    "bestTask": "secret_society_chat",
+    "worstTask": "secret_society_chat",
+    "taskScores": {
+      "secret_society_chat": 79.66666666666667
+    }
+  }
+]
