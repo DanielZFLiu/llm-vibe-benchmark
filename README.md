@@ -52,6 +52,16 @@ node dist/index.js run --tasks secret_society_chat --force
 node dist/index.js generate --tasks relay_webhook_api,secret_society_chat
 ```
 
+## Dashboard
+
+A SvelteKit dashboard for browsing results interactively — leaderboard, per-task scores, model responses, and judge reasoning, all rendered as markdown.
+
+```bash
+cd dashboard
+npm install
+npm run dev      # http://localhost:5173
+```
+
 ## Configuration
 
 Edit `benchmark.config.json`:

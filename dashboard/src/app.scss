@@ -1,0 +1,159 @@
+:root {
+	--bg: #F7F7F5;
+	--surface: #FFFFFF;
+	--surface-hover: #F2F2EF;
+	--text: #0C0C0C;
+	--text-muted: #6B6B6B;
+	--text-faint: #9B9B9B;
+	--border: #E3E3DC;
+	--border-light: #EEEEEA;
+	--accent: #5046E5;
+	--accent-hover: #3D35CC;
+	--accent-faint: rgba(80, 70, 229, 0.07);
+	--accent-light: rgba(80, 70, 229, 0.15);
+	--radius: 8px;
+	--radius-sm: 5px;
+	--font: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+	--font-mono: 'Fira Code', 'Cascadia Code', ui-monospace, 'SF Mono', monospace;
+	--max-width: 1120px;
+	--nav-height: 56px;
+}
+
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+	margin: 0;
+	padding: 0;
+}
+
+html {
+	scroll-behavior: smooth;
+}
+
+body {
+	background: var(--bg);
+	color: var(--text);
+	font-family: var(--font);
+	font-size: 15px;
+	line-height: 1.65;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}
+
+a {
+	color: var(--accent);
+	text-decoration: none;
+	transition: color 0.15s;
+
+	&:hover {
+		color: var(--accent-hover);
+		text-decoration: underline;
+	}
+}
+
+h1, h2, h3, h4, h5, h6 {
+	font-weight: 600;
+	line-height: 1.25;
+	letter-spacing: -0.01em;
+}
+
+// ── Prose / Markdown content ──────────────────────────────────────
+.prose {
+	color: var(--text);
+	font-size: 14.5px;
+	line-height: 1.75;
+
+	h1 { font-size: 1.6rem; margin: 2rem 0 0.75rem; }
+	h2 { font-size: 1.3rem; margin: 1.75rem 0 0.6rem; }
+	h3 { font-size: 1.1rem; margin: 1.5rem 0 0.5rem; }
+	h4 { font-size: 1rem; margin: 1.25rem 0 0.4rem; }
+
+	p { margin-bottom: 1rem; }
+
+	strong { font-weight: 600; }
+	em { font-style: italic; }
+
+	code {
+		font-family: var(--font-mono);
+		font-size: 0.86em;
+		background: var(--border-light);
+		border: 1px solid var(--border);
+		padding: 1px 6px;
+		border-radius: 4px;
+		color: #c0392b;
+	}
+
+	pre {
+		background: #1A1A1A;
+		color: #D4D4D4;
+		padding: 1.25rem 1.5rem;
+		border-radius: var(--radius);
+		overflow-x: auto;
+		margin: 1.25rem 0;
+		font-size: 0.85em;
+		line-height: 1.6;
+
+		code {
+			background: none;
+			border: none;
+			padding: 0;
+			color: inherit;
+			font-size: inherit;
+		}
+	}
+
+	ul, ol {
+		padding-left: 1.5rem;
+		margin-bottom: 1rem;
+
+		li {
+			margin-bottom: 0.3rem;
+		}
+	}
+
+	table {
+		width: 100%;
+		border-collapse: collapse;
+		margin: 1.25rem 0;
+		font-size: 0.92em;
+
+		th, td {
+			border: 1px solid var(--border);
+			padding: 0.5rem 0.875rem;
+			text-align: left;
+		}
+
+		th {
+			background: var(--accent-faint);
+			font-weight: 600;
+		}
+
+		tr:nth-child(even) td {
+			background: var(--surface-hover);
+		}
+	}
+
+	blockquote {
+		border-left: 3px solid var(--accent);
+		padding: 0.25rem 1rem;
+		margin: 1rem 0;
+		color: var(--text-muted);
+		font-style: italic;
+	}
+
+	hr {
+		border: none;
+		border-top: 1px solid var(--border);
+		margin: 1.5rem 0;
+	}
+}
+
+// ── Utilities ─────────────────────────────────────────────────────
+.sr-only {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	overflow: hidden;
+	clip: rect(0 0 0 0);
+}
