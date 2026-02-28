@@ -1,0 +1,80 @@
+[
+  {
+    "model": "z-ai",
+    "avgScore": 73.81944444444444,
+    "stdDev": 8.906525472239682,
+    "bestTask": "secret_society_chat",
+    "worstTask": "react_kanban_board",
+    "taskScores": {
+      "log_analysis_cli": 75.77777777777777,
+      "react_kanban_board": 59,
+      "relay_webhook_api": 77.8888888888889,
+      "secret_society_chat": 82.6111111111111
+    }
+  },
+  {
+    "model": "moonshotai",
+    "avgScore": 73,
+    "stdDev": 16.948314676402788,
+    "bestTask": "secret_society_chat",
+    "worstTask": "react_kanban_board",
+    "taskScores": {
+      "log_analysis_cli": 85.33333333333333,
+      "react_kanban_board": 47.055555555555564,
+      "relay_webhook_api": 69.05555555555554,
+      "secret_society_chat": 90.55555555555554
+    }
+  },
+  {
+    "model": "deepseek",
+    "avgScore": 64.72222222222223,
+    "stdDev": 15.174957034128768,
+    "bestTask": "secret_society_chat",
+    "worstTask": "react_kanban_board",
+    "taskScores": {
+      "log_analysis_cli": 73.94444444444444,
+      "react_kanban_board": 49.22222222222223,
+      "relay_webhook_api": 50.88888888888889,
+      "secret_society_chat": 84.83333333333333
+    }
+  },
+  {
+    "model": "minimax",
+    "avgScore": 64.55555555555556,
+    "stdDev": 12.07301602953391,
+    "bestTask": "secret_society_chat",
+    "worstTask": "relay_webhook_api",
+    "taskScores": {
+      "log_analysis_cli": 60.44444444444445,
+      "react_kanban_board": 64.11111111111111,
+      "relay_webhook_api": 50.166666666666664,
+      "secret_society_chat": 83.5
+    }
+  },
+  {
+    "model": "qwen",
+    "avgScore": 63.472222222222214,
+    "stdDev": 16.363468986860653,
+    "bestTask": "secret_society_chat",
+    "worstTask": "react_kanban_board",
+    "taskScores": {
+      "log_analysis_cli": 69.22222222222223,
+      "react_kanban_board": 42,
+      "relay_webhook_api": 56.27777777777778,
+      "secret_society_chat": 86.38888888888887
+    }
+  },
+  {
+    "model": "stepfun",
+    "avgScore": 53.263888888888886,
+    "stdDev": 20.876561633020025,
+    "bestTask": "secret_society_chat",
+    "worstTask": "react_kanban_board",
+    "taskScores": {
+      "log_analysis_cli": 35.833333333333336,
+      "react_kanban_board": 32.888888888888886,
+      "relay_webhook_api": 59.72222222222222,
+      "secret_society_chat": 84.6111111111111
+    }
+  }
+]
