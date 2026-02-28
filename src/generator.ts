@@ -1,6 +1,7 @@
 import { existsSync, writeFileSync } from "fs";
 import { resolve } from "path";
 import { type BenchmarkConfig, type RunOptions } from "./schemas.js";
+import { loadTaskConfig } from "./config.js";
 import {
     chatCompletion,
     discoverTasks,
@@ -58,12 +59,17 @@ export async function generate(
         }
 
         const prompt = readPrompt(tasksDir, task);
+        const taskConfig = loadTaskConfig(resolve(tasksDir, task));
+        const effectiveMaxTokens = taskConfig?.maxTokens ?? config.maxTokens;
+        const messages: { role: "system" | "user"; content: string }[] = [];
+        if (taskConfig?.systemPrompt) {
+            messages.push({ role: "system", content: taskConfig.systemPrompt });
+        }
+        messages.push({ role: "user", content: prompt });
 
         try {
             const response = await withRetry(() =>
-                chatCompletion(model, [
-                    { role: "user", content: prompt },
-                ]),
+                chatCompletion(model, messages, effectiveMaxTokens),
             );
 
             ensureDir(modelDir);

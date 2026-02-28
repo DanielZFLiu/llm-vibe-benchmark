@@ -1,0 +1,34 @@
+{
+  "criteria": [
+    {
+      "name": "correctness_and_completeness",
+      "description": "Does the implementation compile and run? Are all 5 endpoints implemented and behaving correctly? Does the delivery engine actually fan out events to matching subscribers? Is the HMAC signature correctly computed? Does the retry logic reach exactly 5 attempts before dead-lettering?",
+      "rubric": "90-100: All endpoints present and correct, fan-out works end-to-end, HMAC-SHA256 signature is correctly implemented, retry exhausts exactly 5 attempts with correct exponential backoff delays, dead-letter status is set after final failure, csproj targets net10.0. 60-80: Core flow works but one area is broken or missing — e.g. signature is absent or wrong, retry count is off, or one endpoint is non-functional. 30-59: Partial implementation — fan-out exists but delivery engine is stubbed, or fewer than 4 endpoints are correctly implemented. 0-29: Does not compile, or critical path (event publish → subscriber delivery) is absent."
+    },
+    {
+      "name": "dotnet10_idioms",
+      "description": "Are .NET 10 / ASP.NET Core 10 idioms used correctly throughout? Specifically: Minimal APIs (not controllers), Microsoft.AspNetCore.OpenApi with WithName/WithSummary/WithTags on every endpoint (not Swashbuckle), Microsoft.AspNetCore.RateLimiting for the fixed-window limiter, TypedResults for all responses, and correct ProblemDetails (RFC 9457) for all error paths.",
+      "rubric": "90-100: Minimal APIs used exclusively; built-in OpenAPI configured with metadata on every endpoint; RateLimiting middleware correctly applied to POST /events; TypedResults used for all return values; all error paths return ProblemDetails with correct status codes and type URIs. 60-80: Most idioms correct but one or two deviations — e.g. Swashbuckle used instead of built-in OpenAPI, or some endpoints return anonymous objects instead of TypedResults. 30-59: Mix of controllers and minimal APIs, or missing OpenAPI integration, or error responses are plain strings. 0-29: Uses controller-based API or targets an older framework version."
+    },
+    {
+      "name": "background_service_and_channels",
+      "description": "Is System.Threading.Channels used correctly as the handoff between the API and the delivery worker? Is the BackgroundService correctly implemented — does it read from the channel, process deliveries, and handle cancellation? Does StopAsync drain in-flight work rather than abandon it?",
+      "rubric": "90-100: Channel<T> correctly wired between POST /events and the worker; BackgroundService reads with await foreach or ReadAsync in a loop; CancellationToken propagated throughout; StopAsync waits for in-flight deliveries to complete before returning; channel is completed on shutdown so the reader loop exits cleanly. 60-80: Channel and BackgroundService present and functional but shutdown is abrupt (no drain), or CancellationToken is ignored in one place. 30-59: Background delivery exists but uses a naive queue (ConcurrentQueue + polling sleep) or Task.Run instead of Channel + BackgroundService. 0-29: Delivery is synchronous (blocks the request), or no background processing at all."
+    },
+    {
+      "name": "resilience_and_retry",
+      "description": "Is Microsoft.Extensions.Http.Resilience used for retry (not manual loops, not raw Polly)? Is the exponential backoff configured correctly (1s, 2s, 4s, 8s, 16s — 5 total attempts)? Is the dead-letter transition correct? Are transient HTTP errors (5xx, network failures) retried while 4xx errors are not?",
+      "rubric": "90-100: AddResilienceHandler or AddStandardResilienceHandler configured on the named HttpClient; retry count is 5 with correct exponential delays; 4xx responses are not retried (ShouldHandle configured); after exhausting retries the DeliveryAttempt is marked failed; attempt count and last response code are persisted on each try. 60-80: Resilience pipeline present but backoff delays are wrong, or 4xx errors are also retried, or attempt count is not tracked per attempt. 30-59: Manual retry loop with Task.Delay instead of Microsoft.Extensions.Http.Resilience. 0-29: No retry logic; single attempt only."
+    },
+    {
+      "name": "data_model_and_ef_core",
+      "description": "Is the EF Core 10 setup correct? Are Subscription, Event, and DeliveryAttempt entities properly modeled with relationships? Are indexes present where needed (e.g. on EventId, SubscriptionId, Status)? Is there a migration or EnsureCreated so the database initializes on first run? Are async EF methods (ToListAsync, SaveChangesAsync) used with CancellationToken?",
+      "rubric": "90-100: All three entities present with correct relationships (Event 1→N DeliveryAttempt, Subscription 1→N DeliveryAttempt); appropriate indexes defined; DbContext correctly registered as scoped; async EF methods used with CancellationToken throughout; database initializes on first run without manual steps. 60-80: Entities and relationships correct but missing indexes, or synchronous EF calls used, or CancellationToken not passed to EF methods. 30-59: Only one or two entities modeled, relationships missing, or EF is configured but never actually used (data stored in-memory). 0-29: No EF Core; in-memory collections only."
+    },
+    {
+      "name": "code_quality_and_structure",
+      "description": "Is the code well-organized across the required files? Is structured logging used at appropriate levels (information for success, warning for transient failures, error for dead-letters) with correct structured properties (eventId, subscriptionId, attempt)? Is input validation implemented at the API layer for URL format, empty event type, and payload size? Is the code readable and free of obvious code smells?",
+      "rubric": "90-100: Files organized as specified (Program.cs, Models/, Data/, Services/); ILogger<T> used with structured properties throughout; all three validation rules implemented (URL format, empty type, 64 KB payload limit) returning 400 ProblemDetails; no God classes; DI used correctly; no blocking calls on async paths. 60-80: Good structure but one validation rule missing, or logging is present but uses string interpolation instead of structured properties, or one service is a God class. 30-59: Minimal organization, logging via Console.WriteLine, validation absent or only partially present. 0-29: All code in Program.cs, no logging, no validation."
+    }
+  ]
+}

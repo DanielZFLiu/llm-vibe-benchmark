@@ -1,0 +1,93 @@
+Build "Relay" — a webhook fan-out service as an ASP.NET Core 10 Web API.
+
+## What It Does
+
+Relay accepts event publications and delivers them asynchronously to registered webhook subscribers. Publishers POST an event once; Relay fans it out to every subscriber whose filter matches the event type, with retry on failure and delivery tracking.
+
+## Requirements
+
+### API Endpoints
+
+Implement the following endpoints using **Minimal APIs** (not controllers):
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `POST` | `/subscriptions` | Register a webhook endpoint |
+| `DELETE` | `/subscriptions/{id}` | Remove a subscription |
+| `GET` | `/subscriptions` | List all subscriptions |
+| `POST` | `/events` | Publish an event |
+| `GET` | `/events/{id}/deliveries` | Get delivery status for all subscribers |
+
+**Subscription registration body:**
+```json
+{
+  "url": "https://example.com/webhook",
+  "eventType": "order.created",
+  "secret": "optional-hmac-signing-secret"
+}
+```
+
+**Event publication body:**
+```json
+{
+  "type": "order.created",
+  "payload": { "orderId": "abc123", "amount": 49.99 }
+}
+```
+
+**Delivery status response:**
+```json
+{
+  "eventId": "uuid",
+  "deliveries": [
+    {
+      "subscriptionId": "uuid",
+      "url": "https://example.com/webhook",
+      "status": "delivered",
+      "attempts": 2,
+      "lastAttemptAt": "2025-01-01T12:00:00Z",
+      "responseCode": 200
+    }
+  ]
+}
+```
+
+### Delivery Engine
+
+- Fan-out is **asynchronous**: `POST /events` returns immediately after persisting the event; delivery happens in the background.
+- Use `System.Threading.Channels` with a `BackgroundService` as the delivery worker.
+- Deliver by sending an HTTP POST to the subscriber URL with the event payload as the body.
+- If a `secret` was provided at subscription time, include an `X-Relay-Signature` header: HMAC-SHA256 of the raw JSON payload, hex-encoded.
+- **Retry policy**: attempt delivery up to 5 times with exponential backoff (1s, 2s, 4s, 8s, 16s). Use `Microsoft.Extensions.Http.Resilience` — not manual retry loops, not Polly directly.
+- After 5 failed attempts, mark the delivery as `failed` (dead-lettered). Do not retry further.
+
+### Persistence
+
+- Use **EF Core 10** with **SQLite**.
+- Write proper EF migrations.
+- Entities: `Subscription`, `Event`, `DeliveryAttempt`.
+- `DeliveryAttempt` must track: `SubscriptionId`, `EventId`, `Status` (pending / delivered / failed), `AttemptCount`, `LastAttemptAt`, `LastResponseCode`.
+
+### Technical Requirements
+
+- **OpenAPI**: use `Microsoft.AspNetCore.OpenApi` (built-in .NET 10 — not Swashbuckle) with `WithName`, `WithSummary`, and `WithTags` on every endpoint.
+- **Rate limiting**: apply a fixed-window rate limiter to `POST /events` — max 60 requests/minute per IP, using `Microsoft.AspNetCore.RateLimiting`.
+- **Error responses**: all error paths must return RFC 9457 `ProblemDetails` (use `TypedResults.Problem` or equivalent).
+- **Validation**: reject invalid URLs, empty event types, and payloads exceeding 64 KB at the API layer — return `400` with a `ProblemDetails` body.
+- **Logging**: use structured `ILogger<T>` logging at appropriate levels throughout. Log delivery attempts (success and failure) with event ID, subscription ID, attempt number, and response code.
+- **Cancellation**: propagate `CancellationToken` throughout — endpoints, database calls, and the delivery worker must all respect cancellation.
+- **Graceful shutdown**: the `BackgroundService` must drain in-flight deliveries on `StopAsync` rather than abandoning them.
+
+## Deliverable
+
+Provide the full, runnable implementation:
+
+1. `Program.cs` — app setup, DI registration, middleware pipeline, endpoint definitions
+2. `Models/` — entity classes
+3. `Data/RelayDbContext.cs` — EF Core context and configuration
+4. `Services/DeliveryWorker.cs` — the `BackgroundService` delivery engine
+5. `Services/DeliveryService.cs` — the core delivery logic (HTTP dispatch, signature, status update)
+6. A migration or `EnsureCreated` call so the database initializes on first run
+7. `Relay.csproj` with all required NuGet packages and correct `<TargetFramework>net10.0</TargetFramework>`
+
+The code must compile and run with `dotnet run`. Do not use placeholder comments in place of real implementation.

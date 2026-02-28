@@ -1,0 +1,12 @@
+{
+  "judge": "google/gemini-3.1-pro-preview",
+  "reasoning": "The response is of exceptionally high quality. It provides a complete, runnable ASP.NET Core 10 Web API that flawlessly meets all the specifications.\n\n- **Correctness and Completeness**: All 5 endpoints are perfectly implemented. The task uses a robust mechanism for fan-out via `Channel<T>` and a background worker. The HMAC signature correctly uses HMAC-SHA256 and hex encoding. The payload size limit (64 KB) is accurately implemented utilizing `Encoding.UTF8.GetByteCount`.\n- **.NET 10 Idioms**: Built-in ASP.NET Core 10 OpenAPI (`Microsoft.AspNetCore.OpenApi`) is correctly configured with `WithName`, `WithSummary`, and `WithTags`. The rate limiter is correctly configured as a fixed window per IP. Endpoint responses utilize `TypedResults.Problem` returning strict RFC 9457 structures.\n- **Background Service and Channels**: `System.Threading.Channels` acts correctly as the producer/consumer queue. The worker handles standard execution and utilizes an elegant graceful shutdown method where `OperationCanceledException` triggers a 30-second draining phase using `TryRead` down to empty the channel before shutdown.\n- **Resilience and Retry**: The candidate expertly utilizes `Microsoft.Extensions.Http.Resilience` (the modern Polly v8 wrapper) over manual retry loops. Crucially, the exponential backoff uses the exact specified delays and transient failure filtering. The solution uses advanced Polly `ResilienceContext` property injection mechanism to allow the HTTP Client extension to reach back to the localized DB scope to increment attempt counts accurately during internal retries.\n- **Data Model and EF Core**: The model correctly captures the 1:N relations using EF Core 10 SQLite. Advanced specifications like compound indexes, exact table mapping, and asynchronous lifecycle operations (`SaveChangesAsync` with `CancellationToken`) are used properly. `EnsureCreated()` is present for immediate runnability.\n- **Code Quality and Structure**: Distinct files are strictly scoped to their responsibilities cleanly separating DB contexts, workers, DTOs, and request pipelines. Structured logging is used effectively at every layer.",
+  "scores": {
+    "correctness_and_completeness": 100,
+    "dotnet10_idioms": 100,
+    "background_service_and_channels": 100,
+    "resilience_and_retry": 100,
+    "data_model_and_ef_core": 100,
+    "code_quality_and_structure": 100
+  }
+}

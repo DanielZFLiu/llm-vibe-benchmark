@@ -17,12 +17,14 @@ export function getClient(): OpenRouter {
 export async function chatCompletion(
     model: string,
     messages: { role: "system" | "user" | "assistant"; content: string }[],
+    maxTokens?: number,
 ): Promise<string> {
     const client = getClient();
     const completion = await client.chat.send({
         model,
         messages,
         stream: false,
+        ...(maxTokens !== undefined && { max_tokens: maxTokens }),
     });
     const raw = completion.choices[0]?.message?.content;
     if (!raw) {

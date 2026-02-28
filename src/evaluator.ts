@@ -7,7 +7,7 @@ import {
     type RunOptions,
     JudgeScoreSchema,
 } from "./schemas.js";
-import { loadTaskCriteria } from "./config.js";
+import { loadTaskCriteria, loadTaskConfig } from "./config.js";
 import {
     chatCompletion,
     discoverTasks,
@@ -35,6 +35,7 @@ export function buildJudgePrompt(
     taskPrompt: string,
     response: string,
     criteria: Criterion[],
+    responseNote?: string,
 ): string {
     const criteriaBlock = criteria
         .map((c) => {
@@ -54,7 +55,7 @@ export function buildJudgePrompt(
 ${taskPrompt}
 
 ## Response to Evaluate
-${response}
+${responseNote ? `> **Note:** ${responseNote}\n\n` : ""}${response}
 
 ## Evaluation Criteria
 Score each criterion from 0 to 100:
@@ -171,16 +172,21 @@ export async function evaluate(
             "utf-8",
         ).trim();
         const criteria = loadTaskCriteria(resolve(tasksDir, task));
+        const taskConfig = loadTaskConfig(resolve(tasksDir, task));
         const rawResponse = readFileSync(
             resolve(responsesDir, modelDir, `${task}.md`),
             "utf-8",
         );
         const response = anonymize(rawResponse);
+        const responseNote = taskConfig?.systemPrompt
+            ? "This is a structured multi-file implementation. Evaluate the response holistically across all provided files."
+            : undefined;
 
         const judgePrompt = buildJudgePrompt(
             taskPrompt,
             response,
             criteria,
+            responseNote,
         );
 
         try {

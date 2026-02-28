@@ -1,0 +1,12 @@
+{
+  "judge": "openai/gpt-5.3-codex",
+  "reasoning": "The response is well-structured and includes all requested files, but there are major functional issues. The biggest correctness problem is the delivery worker registration: `DeliveryWorker` is not registered as a hosted service (`AddHostedService` is missing), so background processing may never start. The custom double `AddSingleton<DeliveryWorker>` pattern is also problematic and likely creates a circular resolution path. That means the core publish->fan-out async delivery path is at high risk of not functioning. Retry/dead-letter behavior is also incorrect: the HTTP resilience handler retries internally, but `AttemptCount` is only incremented once per dispatch call, so persisted attempts do not reflect actual retries, and dead-lettering after exactly 5 failed attempts is not reliably achieved. Failed deliveries can remain pending with no requeue path. Exponential timing is not guaranteed to match the exact required 1,2,4,8,16 sequence. On .NET idioms, Minimal APIs and built-in OpenAPI are used, and endpoint metadata is mostly present, but `Results.*` is used instead of `TypedResults`, and RFC 9457 ProblemDetails is not consistently guaranteed for all error paths (e.g., rate limiting rejection handling). Rate limiting is not per-IP partitioned; `AddFixedWindowLimiter` as configured is effectively global. Validation is incomplete: invalid URL and empty event type are not robustly validated at API layer, payload size check uses serialized string length rather than raw byte size, and subscription payload size checking is irrelevant to stated rules. Data modeling with EF Core is fairly solid (entities, relationships, indexes, async calls with cancellation, SQLite, EnsureCreated), though it does not provide proper migrations as requested. Logging is reasonably structured in delivery logic, but overall code quality is reduced by DI/service wiring smells and incomplete validation/error-policy compliance.",
+  "scores": {
+    "correctness_and_completeness": 25,
+    "dotnet10_idioms": 52,
+    "background_service_and_channels": 25,
+    "resilience_and_retry": 28,
+    "data_model_and_ef_core": 80,
+    "code_quality_and_structure": 50
+  }
+}

@@ -3,9 +3,11 @@ import { resolve } from "path";
 import {
     BenchmarkConfigSchema,
     TaskCriteriaSchema,
+    TaskSettingsSchema,
     DEFAULT_CRITERIA,
     type BenchmarkConfig,
     type Criterion,
+    type TaskSettings,
 } from "./schemas.js";
 
 const CONFIG_FILENAME = "benchmark.config.json";
@@ -66,4 +68,33 @@ export function loadTaskCriteria(taskDir: string): Criterion[] {
     }
 
     return result.data.criteria;
+}
+
+export function loadTaskConfig(taskDir: string): TaskSettings | null {
+    const configPath = resolve(taskDir, "task.json");
+
+    if (!existsSync(configPath)) {
+        return null;
+    }
+
+    let raw: unknown;
+    try {
+        raw = JSON.parse(readFileSync(configPath, "utf-8"));
+    } catch {
+        console.warn(
+            `Malformed JSON in ${configPath}, ignoring task settings.`,
+        );
+        return null;
+    }
+
+    const result = TaskSettingsSchema.safeParse(raw);
+
+    if (!result.success) {
+        console.warn(
+            `Invalid task.json in ${taskDir}, ignoring task settings:\n${result.error.issues.map((i) => `  - ${i.path.join(".")}: ${i.message}`).join("\n")}`,
+        );
+        return null;
+    }
+
+    return result.data;
 }

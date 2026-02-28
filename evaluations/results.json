@@ -1,62 +1,68 @@
 [
   {
-    "model": "stepfun",
-    "avgScore": 91.72222222222221,
-    "stdDev": 0,
-    "bestTask": "secret_society_chat",
-    "worstTask": "secret_society_chat",
-    "taskScores": {
-      "secret_society_chat": 91.72222222222221
-    }
-  },
-  {
     "model": "moonshotai",
-    "avgScore": 91.22222222222223,
-    "stdDev": 0,
+    "avgScore": 83.33333333333334,
+    "stdDev": 7.888888888888893,
     "bestTask": "secret_society_chat",
-    "worstTask": "secret_society_chat",
+    "worstTask": "relay_webhook_api",
     "taskScores": {
+      "relay_webhook_api": 75.44444444444444,
       "secret_society_chat": 91.22222222222223
     }
   },
   {
-    "model": "qwen",
-    "avgScore": 88.44444444444444,
-    "stdDev": 0,
-    "bestTask": "secret_society_chat",
-    "worstTask": "secret_society_chat",
-    "taskScores": {
-      "secret_society_chat": 88.44444444444444
-    }
-  },
-  {
-    "model": "deepseek",
-    "avgScore": 87.77777777777777,
-    "stdDev": 0,
-    "bestTask": "secret_society_chat",
-    "worstTask": "secret_society_chat",
-    "taskScores": {
-      "secret_society_chat": 87.77777777777777
-    }
-  },
-  {
     "model": "z-ai",
-    "avgScore": 85.33333333333333,
-    "stdDev": 0,
+    "avgScore": 79.13888888888889,
+    "stdDev": 6.194444444444443,
     "bestTask": "secret_society_chat",
-    "worstTask": "secret_society_chat",
+    "worstTask": "relay_webhook_api",
     "taskScores": {
+      "relay_webhook_api": 72.94444444444444,
       "secret_society_chat": 85.33333333333333
     }
   },
   {
-    "model": "minimax",
-    "avgScore": 79.66666666666667,
-    "stdDev": 0,
+    "model": "stepfun",
+    "avgScore": 74,
+    "stdDev": 17.722222222222218,
     "bestTask": "secret_society_chat",
-    "worstTask": "secret_society_chat",
+    "worstTask": "relay_webhook_api",
     "taskScores": {
+      "relay_webhook_api": 56.27777777777778,
+      "secret_society_chat": 91.72222222222221
+    }
+  },
+  {
+    "model": "deepseek",
+    "avgScore": 68.33333333333333,
+    "stdDev": 19.44444444444444,
+    "bestTask": "secret_society_chat",
+    "worstTask": "relay_webhook_api",
+    "taskScores": {
+      "relay_webhook_api": 48.88888888888889,
+      "secret_society_chat": 87.77777777777777
+    }
+  },
+  {
+    "model": "minimax",
+    "avgScore": 66.38888888888889,
+    "stdDev": 13.277777777777782,
+    "bestTask": "secret_society_chat",
+    "worstTask": "relay_webhook_api",
+    "taskScores": {
+      "relay_webhook_api": 53.11111111111111,
       "secret_society_chat": 79.66666666666667
+    }
+  },
+  {
+    "model": "qwen",
+    "avgScore": 65.97222222222223,
+    "stdDev": 22.47222222222222,
+    "bestTask": "secret_society_chat",
+    "worstTask": "relay_webhook_api",
+    "taskScores": {
+      "relay_webhook_api": 43.5,
+      "secret_society_chat": 88.44444444444444
     }
   }
 ]

@@ -13,7 +13,7 @@ A TypeScript framework for evaluating LLMs on a "vibe" basis — quality, organi
 1. **Generate** — Each Set C model responds to every task in `tasks/`.
 2. **Anonymize** — Model self-identifiers are stripped before judging.
 3. **Evaluate** — Each Set J judge scores each response (0–100) per criterion with chain-of-thought reasoning.
-4. **Report** — Scores are averaged across judges and criteria to produce a leaderboard.
+4. **Report** — Scores are averaged across judges and criteria, printed as a leaderboard, and saved to `evaluations/results.json`.
 
 ## Quick Start
 
@@ -21,7 +21,7 @@ A TypeScript framework for evaluating LLMs on a "vibe" basis — quality, organi
 npm install
 cp .env.example .env       # add your OPENROUTER_API_KEY
 npm run build
-node dist/index.js run     # generate -> evaluate -> report
+node dist/index.js run     # generate → evaluate → report
 ```
 
 ### CLI Commands
@@ -33,20 +33,58 @@ node dist/index.js report     # print the leaderboard
 node dist/index.js run        # all three in sequence
 ```
 
+### Options
+
+```
+--tasks <t1,t2,...>   Only run the specified task names (comma-separated)
+--force               Overwrite existing outputs instead of skipping them
+```
+
+Examples:
+```bash
+# Run only one task end-to-end
+node dist/index.js run --tasks relay_webhook_api
+
+# Re-run a task you already ran (overwrite previous responses and evaluations)
+node dist/index.js run --tasks secret_society_chat --force
+
+# Generate for multiple specific tasks
+node dist/index.js generate --tasks relay_webhook_api,secret_society_chat
+```
+
 ## Configuration
 
 Edit `benchmark.config.json`:
 
 ```json
 {
-  "setC": ["openai/gpt-5.2", "anthropic/claude-3.5-sonnet"],
-  "setJ": ["openai/gpt-5.3-codex", "anthropic/claude-3.6-opus"],
+  "setC": ["deepseek/deepseek-v3.2", "qwen/qwen3.5-397b-a17b"],
+  "setJ": ["openai/gpt-5.3-codex", "anthropic/claude-opus-4.6"],
   "tasksDir": "./tasks",
   "responsesDir": "./responses",
   "evaluationsDir": "./evaluations",
-  "maxConcurrency": 3
+  "maxConcurrency": 3,
+  "maxTokens": 32768
 }
 ```
+
+| Field | Default | Description |
+|---|---|---|
+| `setC` | — | Competitor model IDs (OpenRouter format) |
+| `setJ` | — | Judge model IDs |
+| `tasksDir` | `./tasks` | Where task folders live |
+| `responsesDir` | `./responses` | Where generated responses are saved |
+| `evaluationsDir` | `./evaluations` | Where judge scores and `results.json` are saved |
+| `maxConcurrency` | `3` | Max parallel API calls |
+| `maxTokens` | `16384` | Default max output tokens per generation call — can be overridden per task in `task.json` |
+
+## Output Files
+
+After running, two types of output are saved:
+
+- **`responses/<model>/<task>.md`** — Raw response from each competitor model.
+- **`evaluations/<task>/<model>__<judge>.json`** — Per-judge score file with reasoning and per-criterion scores.
+- **`evaluations/results.json`** — Aggregated leaderboard. Re-running `report` **merges** new results in rather than overwriting — models not present in the latest run are preserved from prior runs. Newest data wins on conflict.
 
 ## Adding Tasks
 
@@ -54,12 +92,27 @@ Drop a folder into `tasks/` with a `prompt.txt`:
 
 ```
 tasks/
-├── build_a_snake_game/
+├── my_task/
 │   ├── prompt.txt          # required
-│   └── criteria.json       # optional: override default rubric
-└── summarize_article/
-    └── prompt.txt
+│   ├── criteria.json       # optional: override default rubric
+│   └── task.json           # optional: per-task settings (see below)
 ```
+
+### Per-Task Settings (`task.json`)
+
+Add a `task.json` to any task folder to override global settings for that task:
+
+```json
+{
+  "maxTokens": 32768,
+  "systemPrompt": "Introduce each file with `### File: <relative-path>` followed by a fenced code block."
+}
+```
+
+| Field | Description |
+|---|---|
+| `maxTokens` | Overrides the global `maxTokens` for generation calls on this task. Multi-file programming tasks typically need `32768`+. |
+| `systemPrompt` | Injected as a `system` role message before the task prompt in all competitor generation calls. Use this to enforce consistent output formatting (e.g. file headers for multi-file implementations). When set, judges are also automatically notified that the response is a structured multi-file implementation. |
 
 ### Default Criteria
 
@@ -74,7 +127,7 @@ Used when no `criteria.json` is present:
 
 ### Custom Criteria
 
-Add a `criteria.json` to any task folder. Optional `rubric` field anchors scoring:
+Add a `criteria.json` to any task folder. Optional `rubric` field anchors scoring and counters judge score clustering:
 
 ```json
 {
@@ -89,21 +142,23 @@ Add a `criteria.json` to any task folder. Optional `rubric` field anchors scorin
 }
 ```
 
+## Included Tasks
+
+| Task | Type | Description |
+|---|---|---|
+| `secret_society_chat` | System design | Design a self-hosted, invite-only, E2E encrypted chat app for ~1,000 users |
+| `relay_webhook_api` | Programming | Build a webhook fan-out service in ASP.NET Core 10 (Minimal APIs, EF Core, resilience, background delivery) |
+
 ## Leaderboard Output
 
 ```
 Rank  Model                   Avg Score  Std Dev   Best Task           Worst Task
 ----  -----                   ---------  -------   ---------           ----------
-#1    claude-3.5-sonnet       88.2       4.1       snake_game          summarize
-#2    gpt-5.2                 87.5       12.3      summarize           snake_game
+#1    deepseek-v3.2           88.2       4.1       relay_webhook_api   secret_society
+#2    qwen3.5-397b            85.7       6.3       secret_society      relay_webhook_api
 ```
 
-## Key Design Decisions
-
-- **Resumable** — Skips tasks/evaluations where output files already exist.
-- **Retries** — Malformed judge output is retried up to 3 times (Zod-validated).
-- **Concurrency** — Configurable via `maxConcurrency`.
-- **Anonymization** — Model identity strings are stripped before judging.
+A per-task breakdown table is also printed below the leaderboard.
 
 ## Testing
 

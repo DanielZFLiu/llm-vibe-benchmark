@@ -15,5 +15,6 @@
   "tasksDir": "./tasks",
   "responsesDir": "./responses",
   "evaluationsDir": "./evaluations",
-  "maxConcurrency": 3
+  "maxConcurrency": 3,
+  "maxTokens": 32768
 }

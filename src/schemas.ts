@@ -9,6 +9,7 @@ export const BenchmarkConfigSchema = z.object({
     responsesDir: z.string().default("./responses"),
     evaluationsDir: z.string().default("./evaluations"),
     maxConcurrency: z.number().int().positive().default(3),
+    maxTokens: z.number().int().positive().default(16384),
 });
 
 export type BenchmarkConfig = z.infer<typeof BenchmarkConfigSchema>;
@@ -67,6 +68,15 @@ export interface ModelStats {
     worstTask: string;
     taskScores: Record<string, number>;
 }
+
+// --- Per-Task Settings (task.json) ---
+
+export const TaskSettingsSchema = z.object({
+    maxTokens: z.number().int().positive().optional(),
+    systemPrompt: z.string().optional(),
+});
+
+export type TaskSettings = z.infer<typeof TaskSettingsSchema>;
 
 // --- Default Criteria ---
 

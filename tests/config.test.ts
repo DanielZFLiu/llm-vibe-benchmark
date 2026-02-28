@@ -3,7 +3,7 @@ import { mkdirSync, writeFileSync, rmSync } from "fs";
 import { resolve } from "path";
 import { tmpdir } from "os";
 import { randomUUID } from "crypto";
-import { loadConfig, getApiKey, loadTaskCriteria } from "../src/config.js";
+import { loadConfig, getApiKey, loadTaskCriteria, loadTaskConfig } from "../src/config.js";
 
 function makeTempDir(): string {
     const dir = resolve(tmpdir(), `vibe-test-${randomUUID()}`);
@@ -168,5 +168,72 @@ describe("loadTaskCriteria", () => {
         // Should not throw, just warn and return defaults
         const criteria = loadTaskCriteria(tempDir);
         expect(criteria).toHaveLength(4);
+    });
+});
+
+describe("loadTaskConfig", () => {
+    let tempDir: string;
+
+    beforeEach(() => {
+        tempDir = makeTempDir();
+    });
+
+    afterEach(() => {
+        rmSync(tempDir, { recursive: true, force: true });
+    });
+
+    it("returns null when no task.json exists", () => {
+        expect(loadTaskConfig(tempDir)).toBeNull();
+    });
+
+    it("loads maxTokens from task.json", () => {
+        writeFileSync(
+            resolve(tempDir, "task.json"),
+            JSON.stringify({ maxTokens: 32768 }),
+        );
+        const config = loadTaskConfig(tempDir);
+        expect(config).not.toBeNull();
+        expect(config!.maxTokens).toBe(32768);
+    });
+
+    it("loads systemPrompt from task.json", () => {
+        writeFileSync(
+            resolve(tempDir, "task.json"),
+            JSON.stringify({ systemPrompt: "You are a helpful assistant." }),
+        );
+        const config = loadTaskConfig(tempDir);
+        expect(config).not.toBeNull();
+        expect(config!.systemPrompt).toBe("You are a helpful assistant.");
+    });
+
+    it("loads both maxTokens and systemPrompt together", () => {
+        writeFileSync(
+            resolve(tempDir, "task.json"),
+            JSON.stringify({ maxTokens: 16384, systemPrompt: "Be concise." }),
+        );
+        const config = loadTaskConfig(tempDir);
+        expect(config!.maxTokens).toBe(16384);
+        expect(config!.systemPrompt).toBe("Be concise.");
+    });
+
+    it("returns null with an empty object (all fields optional)", () => {
+        writeFileSync(resolve(tempDir, "task.json"), JSON.stringify({}));
+        const config = loadTaskConfig(tempDir);
+        expect(config).not.toBeNull();
+        expect(config!.maxTokens).toBeUndefined();
+        expect(config!.systemPrompt).toBeUndefined();
+    });
+
+    it("returns null on malformed JSON", () => {
+        writeFileSync(resolve(tempDir, "task.json"), "not json!");
+        expect(loadTaskConfig(tempDir)).toBeNull();
+    });
+
+    it("returns null on invalid schema (negative maxTokens)", () => {
+        writeFileSync(
+            resolve(tempDir, "task.json"),
+            JSON.stringify({ maxTokens: -1 }),
+        );
+        expect(loadTaskConfig(tempDir)).toBeNull();
     });
 });

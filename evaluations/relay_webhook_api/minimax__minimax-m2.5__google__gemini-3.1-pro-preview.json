@@ -1,0 +1,12 @@
+{
+  "judge": "google/gemini-3.1-pro-preview",
+  "reasoning": "The implementation correctly structures the project across multiple files and implements the required Minimal API endpoints, background service, and EF Core data models. However, it suffers from significant issues. First, it will not compile out-of-the-box due to missing 'using Polly;' scopes. If resolved, it encounters a catastrophic runtime bug: 'HttpRequestMessage' instances are reused inside the Polly loop, which throws 'InvalidOperationException' on the first retry. Second, the rate limiter policy is registered but never applied to the POST /events endpoint via '.RequireRateLimiting()'. Third, it violates the constraint against using Polly directly, opting for a manual 'ResiliencePipelineBuilder' rather than adhering to Microsoft.Extensions.Http.Resilience's client factory methods like 'AddStandardResilienceHandler()', which is the standard way to clone messages and handle retries. This manual approach also prevents logging and tracking each distinct attempt in the database, updating it only when the pipeline succeeds or gets exhausted. Furthermore, while the BackgroundService uses Channels correctly to decouple work, it does not gracefully drain in-flight messages upon shutdown, simply cancelling the token instead. On the positive side, EF Core modeling, navigation properties, URL/payload scale validation, and cancellation token propagation are executed commendably.",
+  "scores": {
+    "correctness_and_completeness": 35,
+    "dotnet10_idioms": 60,
+    "background_service_and_channels": 65,
+    "resilience_and_retry": 30,
+    "data_model_and_ef_core": 95,
+    "code_quality_and_structure": 75
+  }
+}

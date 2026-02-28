@@ -1,0 +1,12 @@
+{
+  "judge": "openai/gpt-5.3-codex",
+  "reasoning": "The submission is close in architecture but has critical issues that prevent it from meeting the prompt fully. Most importantly, it likely does not compile as written (e.g., missing parenthesis in DI registration, invalid/incorrect rate limiter policy shape, incorrect OpenAPI metadata usage, and mutation of init-only record property). Core endpoint set is present, and the fan-out concept with Channel + BackgroundService is implemented, but several required behaviors are off: error paths do not consistently return ProblemDetails (many plain NotFound/NoContent paths), TypedResults are not used consistently, cancellation tokens are often omitted or ignored, and delivery status URL loading is inefficient/buggy. Retry handling does not satisfy the requirement to use Microsoft.Extensions.Http.Resilience as the actual 5-attempt policy; instead it uses a manual loop plus an additional client retry handler, causing semantics mismatch and likely over-retry. It also retries all non-success responses (including 4xx), which conflicts with expected behavior. Data layer uses EF Core + SQLite and initializes DB, but entity naming diverges from required DeliveryAttempt, indexing is incomplete (missing SubscriptionId), and relationship loading for delivery status is flawed. Logging exists and is structured in parts, and validation includes URL/type/payload checks, but payload size check is imperfect (char length vs bytes) and not all API-layer validation paths are robust.",
+  "scores": {
+    "correctness_and_completeness": 18,
+    "dotnet10_idioms": 32,
+    "background_service_and_channels": 58,
+    "resilience_and_retry": 15,
+    "data_model_and_ef_core": 62,
+    "code_quality_and_structure": 48
+  }
+}

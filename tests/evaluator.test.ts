@@ -92,6 +92,16 @@ describe("buildJudgePrompt", () => {
         expect(prompt).not.toContain("Rubric:");
     });
 
+    it("includes responseNote when provided", () => {
+        const prompt = buildJudgePrompt("task", "response", baseCriteria, "This is a multi-file implementation.");
+        expect(prompt).toContain("This is a multi-file implementation.");
+    });
+
+    it("omits responseNote section when not provided", () => {
+        const prompt = buildJudgePrompt("task", "response", baseCriteria);
+        expect(prompt).not.toContain("**Note:**");
+    });
+
     it("includes score keys in JSON format instruction", () => {
         const prompt = buildJudgePrompt("task", "response", baseCriteria);
         expect(prompt).toContain('"correctness": <0-100>');
