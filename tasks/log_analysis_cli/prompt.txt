@@ -1,0 +1,127 @@
+Build "LogLens" — a Python command-line tool for analyzing structured JSON log files.
+
+## What It Does
+
+LogLens reads newline-delimited JSON (NDJSON) log files, filters entries by flexible criteria, computes aggregations, and outputs results as formatted tables, JSON, or CSV. It is designed to handle large log files (multi-GB) efficiently via streaming — never loading the entire file into memory.
+
+## Requirements
+
+### Log Format
+
+Each line of the input file is a JSON object with at least these fields:
+
+```json
+{"timestamp": "2025-01-15T08:23:41.012Z", "level": "error", "message": "Connection refused", "service": "auth-api", "request_id": "abc-123", "duration_ms": 342}
+```
+
+- `timestamp` — ISO 8601 string (always present)
+- `level` — one of `debug`, `info`, `warning`, `error`, `critical` (always present)
+- `message` — free-text string (always present)
+- Additional fields vary per log entry and must be queryable.
+
+### CLI Interface
+
+Use **Click** as the CLI framework. Implement three subcommands:
+
+#### `loglens filter`
+
+Stream log entries matching the given criteria to stdout.
+
+```
+loglens filter <file> [OPTIONS]
+
+Options:
+  --level LEVEL          Filter by log level (repeatable: --level error --level critical)
+  --since DATETIME       Only entries at or after this timestamp (ISO 8601)
+  --until DATETIME       Only entries before this timestamp (ISO 8601)
+  --field FIELD=VALUE    Match entries where a field equals a value (repeatable, AND logic)
+  --contains TEXT        Match entries whose message contains TEXT (case-insensitive)
+  --output FORMAT        Output format: json (default), csv, table
+  --limit N              Stop after N matching entries
+  -                      Read from stdin instead of a file
+```
+
+#### `loglens stats`
+
+Compute aggregations over the (optionally filtered) log entries.
+
+```
+loglens stats <file> [OPTIONS]
+
+Options:
+  (same filter options as above: --level, --since, --until, --field, --contains)
+  --output FORMAT        Output format: json (default), table
+```
+
+Output a summary including:
+- Total entries (matching filters)
+- Count per log level
+- Earliest and latest timestamp
+- Top 10 most frequent `message` values (with count)
+- Top 5 slowest entries by `duration_ms` (if field exists)
+- Entries per hour histogram (text-based bar chart in table mode)
+
+#### `loglens watch`
+
+Tail a file and stream new matching entries as they are appended (like `tail -f` with filters).
+
+```
+loglens watch <file> [OPTIONS]
+
+Options:
+  (same filter options as above)
+  --output FORMAT        Output format: json (default), table
+```
+
+### Technical Requirements
+
+- **Python 3.12+** — use modern syntax: `type` statements for type aliases, `match` statements where appropriate, `X | Y` union syntax.
+- **Type hints everywhere** — all function signatures, return types, and key variables must be annotated. Use `Protocol` and `TypeVar` where they improve clarity.
+- **Streaming architecture** — the core pipeline must be generator-based: `read → parse → filter → transform → output`. Each stage is a generator that yields to the next. Memory usage must be O(1) relative to file size for `filter` and `watch` commands.
+- **Error handling** — malformed JSON lines must be skipped with a warning to stderr (include line number). Missing required fields (`timestamp`, `level`, `message`) skip the entry with a warning. File not found, permission errors, and broken pipes must produce clear error messages and appropriate exit codes (0 = success, 1 = user error, 2 = runtime error).
+- **Dataclasses** — use `@dataclass` (or `@dataclass(slots=True)`) for internal data structures like `LogEntry`, `FilterConfig`, `StatsResult`.
+- **Testing** — include a `tests/` directory with **pytest** tests covering:
+  - Parsing valid and malformed lines
+  - Each filter type individually and in combination
+  - Stats aggregation correctness
+  - Edge cases: empty file, all lines malformed, timezone handling
+  - At least 15 test functions total
+- **Packaging** — use a `pyproject.toml` with a `[project.scripts]` entry so `loglens` is installable as a CLI command via `pip install -e .`
+
+### Code Organization
+
+```
+loglens/
+├── pyproject.toml
+├── README.md
+├── src/
+│   └── loglens/
+│       ├── __init__.py
+│       ├── cli.py            # Click command definitions
+│       ├── parser.py         # NDJSON line parsing, LogEntry dataclass
+│       ├── filters.py        # Filter predicates and FilterConfig
+│       ├── aggregator.py     # Stats computation
+│       ├── formatters.py     # Output formatting (JSON, CSV, table)
+│       ├── watcher.py        # File tail/watch logic
+│       └── types.py          # Shared type definitions
+└── tests/
+    ├── conftest.py           # Shared fixtures (sample log lines, temp files)
+    ├── test_parser.py
+    ├── test_filters.py
+    ├── test_aggregator.py
+    └── test_formatters.py
+```
+
+## Deliverable
+
+Provide the complete, runnable project. The tool must be installable and runnable:
+
+```bash
+pip install -e .
+loglens filter sample.log --level error --since 2025-01-15T00:00:00Z --output table
+loglens stats sample.log --output table
+```
+
+Include a small `sample.log` file (20–30 lines) demonstrating varied log entries for manual testing.
+
+Do not use placeholder comments in place of real implementation.

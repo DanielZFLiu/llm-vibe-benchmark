@@ -11,6 +11,7 @@ import {
     sanitizeModelName,
     runConcurrent,
 } from "./utils.js";
+import { ProgressBar } from "./progress.js";
 
 export async function generate(
     config: BenchmarkConfig,
@@ -24,7 +25,9 @@ export async function generate(
     if (options?.tasks) {
         const notFound = options.tasks.filter((t) => !tasks.includes(t));
         if (notFound.length > 0) {
-            console.warn(`  Warning: tasks not found and will be skipped: ${notFound.join(", ")}`);
+            console.warn(
+                `  Warning: tasks not found and will be skipped: ${notFound.join(", ")}`,
+            );
         }
         tasks = tasks.filter((t) => options.tasks!.includes(t));
         if (tasks.length === 0) {
@@ -38,6 +41,7 @@ export async function generate(
         `\nGenerating responses: ${config.setC.length} models × ${tasks.length} tasks = ${total} calls\n`,
     );
 
+    const progress = new ProgressBar(total);
     let completed = 0;
     let skipped = 0;
 
@@ -48,43 +52,55 @@ export async function generate(
         }
     }
 
-    await runConcurrent(queue, config.maxConcurrency, async ({ model, task }) => {
-        const modelDir = resolve(responsesDir, sanitizeModelName(model));
-        const outputPath = resolve(modelDir, `${task}.md`);
+    await runConcurrent(
+        queue,
+        config.maxConcurrency,
+        async ({ model, task }) => {
+            const modelDir = resolve(responsesDir, sanitizeModelName(model));
+            const outputPath = resolve(modelDir, `${task}.md`);
 
-        if (!options?.force && existsSync(outputPath)) {
-            skipped++;
-            console.log(`  [skip] ${model} / ${task} (already exists)`);
-            return;
-        }
+            if (!options?.force && existsSync(outputPath)) {
+                skipped++;
+                progress.skip();
+                progress.log(`  [skip] ${model} / ${task} (already exists)`);
+                return;
+            }
 
-        const prompt = readPrompt(tasksDir, task);
-        const taskConfig = loadTaskConfig(resolve(tasksDir, task));
-        const effectiveMaxTokens = taskConfig?.maxTokens ?? config.maxTokens;
-        const messages: { role: "system" | "user"; content: string }[] = [];
-        if (taskConfig?.systemPrompt) {
-            messages.push({ role: "system", content: taskConfig.systemPrompt });
-        }
-        messages.push({ role: "user", content: prompt });
+            progress.start();
+            const prompt = readPrompt(tasksDir, task);
+            const taskConfig = loadTaskConfig(resolve(tasksDir, task));
+            const effectiveMaxTokens =
+                taskConfig?.maxTokens ?? config.maxTokens;
+            const messages: { role: "system" | "user"; content: string }[] = [];
+            if (taskConfig?.systemPrompt) {
+                messages.push({
+                    role: "system",
+                    content: taskConfig.systemPrompt,
+                });
+            }
+            messages.push({ role: "user", content: prompt });
 
-        try {
-            const response = await withRetry(() =>
-                chatCompletion(model, messages, effectiveMaxTokens),
-            );
+            try {
+                const response = await withRetry(() =>
+                    chatCompletion(model, messages, effectiveMaxTokens),
+                );
 
-            ensureDir(modelDir);
-            writeFileSync(outputPath, response, "utf-8");
-            completed++;
-            console.log(
-                `  [done] ${model} / ${task} (${completed + skipped}/${total})`,
-            );
-        } catch (err) {
-            const msg =
-                err instanceof Error ? err.message : String(err);
-            console.error(`  [FAIL] ${model} / ${task}: ${msg}`);
-        }
-    });
+                ensureDir(modelDir);
+                writeFileSync(outputPath, response, "utf-8");
+                completed++;
+                progress.succeed();
+                progress.log(
+                    `  [done] ${model} / ${task} (${completed + skipped}/${total})`,
+                );
+            } catch (err) {
+                const msg = err instanceof Error ? err.message : String(err);
+                progress.fail();
+                progress.log(`  [FAIL] ${model} / ${task}: ${msg}`);
+            }
+        },
+    );
 
+    progress.finish();
     console.log(
         `\nGeneration complete: ${completed} generated, ${skipped} skipped, ${total - completed - skipped} failed`,
     );

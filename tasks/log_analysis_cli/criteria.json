@@ -1,0 +1,34 @@
+{
+  "criteria": [
+    {
+      "name": "python_idioms_and_modern_syntax",
+      "description": "Does the code use modern Python 3.12+ features idiomatically? Are generators used for the streaming pipeline? Are dataclasses used for data structures? Are context managers used for file handling? Are comprehensions, match statements, and walrus operators used where they improve clarity? Is the code Pythonic — concise, readable, following PEP 8?",
+      "rubric": "90-100: Idiomatic Python throughout — generator-based pipeline with yield/yield from, @dataclass(slots=True) for LogEntry and config objects, context managers for all file I/O, match statements for at least one dispatch (e.g. output format selection), modern union syntax (X | Y), PEP 8 compliant, no Java-style getters/setters. 60-80: Mostly idiomatic but misses one major pattern — e.g. uses dicts instead of dataclasses, or loads entire file into a list instead of using generators, or uses if/elif chains where match would be cleaner. 30-59: Functional but un-Pythonic — verbose class hierarchies, no generators, manual file handle management, no dataclasses. 0-29: Not recognizably Pythonic; reads like Java or C++ translated to Python syntax."
+    },
+    {
+      "name": "cli_design_and_ux",
+      "description": "Is Click used correctly with well-structured subcommands (filter, stats, watch)? Does each subcommand have proper help text, option types, and validation? Are exit codes correct (0 success, 1 user error, 2 runtime error)? Does stdin reading work? Is the --output flag handled for all formats (json, csv, table)?",
+      "rubric": "90-100: Three Click subcommands with comprehensive help text; option types validated (e.g. DateTime for --since/--until, Choice for --output); repeatable options work correctly (--level, --field); stdin reading via '-' works; exit codes are correct and consistent; errors produce clear messages to stderr, not tracebacks. 60-80: Subcommands present and functional but help text is sparse, or one option type is wrong (e.g. --since accepts string but doesn't validate as ISO 8601), or exit codes are inconsistent. 30-59: CLI exists but uses argparse instead of Click, or subcommands are missing (single command with mode flag), or error output is raw tracebacks. 0-29: No proper CLI — hardcoded paths or a script that must be called with `python script.py`."
+    },
+    {
+      "name": "streaming_and_performance",
+      "description": "Is the core pipeline generator-based (read → parse → filter → output) so that memory usage is O(1) relative to file size? Are lines processed one at a time without buffering the entire file? Does the stats command accumulate results incrementally? Does the watch command use efficient file tailing (seek to end, poll for new data)?",
+      "rubric": "90-100: Full generator pipeline — file read yields lines, parser yields LogEntry objects, filters yield matching entries; stats accumulates into counters/heaps without storing all entries; watch seeks to end of file and polls efficiently (not re-reading from start); memory usage is demonstrably O(1) for filter and watch. 60-80: Generator pipeline for filter but stats loads all matching entries into a list, or watch re-reads from the beginning, or one stage buffers unnecessarily. 30-59: File is read line-by-line but parsed entries are collected into a list before filtering; watch is absent or trivially broken. 0-29: Entire file loaded into memory with json.load() or readlines(); no streaming."
+    },
+    {
+      "name": "type_hints_and_type_safety",
+      "description": "Are type hints present on all function signatures, return types, and key variables? Are modern Python typing features used — Protocol, TypeVar, X | Y union syntax, type aliases? Is types.py well-designed with shared type definitions? Could a type checker (mypy/pyright) run cleanly on this code?",
+      "rubric": "90-100: All functions annotated with parameter types and return types; types.py defines shared types/protocols; modern syntax used (X | Y, not Union[X, Y]); Protocol used for at least one abstraction (e.g. Formatter protocol); generics used where appropriate; code would pass mypy --strict with minimal issues. 60-80: Most functions annotated but some return types missing, or old-style Union/Optional used instead of modern syntax, or types.py is absent (types scattered). 30-59: Partial type hints — some functions annotated, others not; no use of Protocol or TypeVar; would produce many mypy errors. 0-29: No type hints, or type hints are mostly `Any`."
+    },
+    {
+      "name": "error_handling_and_edge_cases",
+      "description": "Are malformed JSON lines skipped with a warning to stderr (including line number)? Are entries with missing required fields skipped gracefully? Does file-not-found produce a clear error and exit code 1? Is BrokenPipeError handled (piping to head)? Are empty files, all-malformed files, and timezone-naive timestamps handled?",
+      "rubric": "90-100: Malformed lines emit warning to stderr with line number and continue; missing required fields skip with warning; FileNotFoundError caught with clear message and exit 1; BrokenPipeError caught cleanly (no traceback); empty file produces empty output (not a crash); timezone-aware and naive timestamps both handled correctly. 60-80: Most error paths handled but one edge case crashes — e.g. BrokenPipeError not caught, or empty file raises StopIteration, or timezone-naive timestamps cause an exception. 30-59: Basic error handling — FileNotFoundError caught but malformed lines crash the parser, or errors produce raw tracebacks instead of user-friendly messages. 0-29: No error handling; any malformed input crashes the tool."
+    },
+    {
+      "name": "testing_and_packaging",
+      "description": "Does the project include pytest tests with at least 15 test functions? Are parsing, filtering, aggregation, and formatting each tested? Are edge cases covered (empty file, malformed lines, combined filters)? Does pyproject.toml define the project correctly with a [project.scripts] entry? Is the project installable with `pip install -e .`? Is a sample.log file included?",
+      "rubric": "90-100: 15+ pytest tests covering all modules; conftest.py with shared fixtures; edge cases tested (empty file, all malformed, timezone handling); pyproject.toml with correct metadata, dependencies (click), and [project.scripts] entry pointing to CLI; sample.log with 20-30 varied entries; installable and runnable after pip install -e. 60-80: 10-14 tests covering most modules but missing edge cases, or pyproject.toml is correct but sample.log is absent, or one module is untested. 30-59: Fewer than 10 tests; setup.py used instead of pyproject.toml; tests are superficial (only happy path); sample.log missing. 0-29: No tests, or tests don't run; no packaging configuration."
+    }
+  ]
+}

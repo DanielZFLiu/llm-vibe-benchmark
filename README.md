@@ -157,7 +157,9 @@ Add a `criteria.json` to any task folder. Optional `rubric` field anchors scorin
 | Task | Type | Description |
 |---|---|---|
 | `secret_society_chat` | System design | Design a self-hosted, invite-only, E2E encrypted chat app for ~1,000 users |
-| `relay_webhook_api` | Programming | Build a webhook fan-out service in ASP.NET Core 10 (Minimal APIs, EF Core, resilience, background delivery) |
+| `relay_webhook_api` | Programming (C#) | Build a webhook fan-out service in ASP.NET Core 10 (Minimal APIs, EF Core, resilience, background delivery) |
+| `react_kanban_board` | Programming (React/TS) | Build an interactive Kanban board SPA with drag-and-drop, filters, undo, and localStorage persistence |
+| `log_analysis_cli` | Programming (Python) | Build a streaming CLI log analyzer with filters, aggregations, and file tailing |
 
 ## Leaderboard Output
 

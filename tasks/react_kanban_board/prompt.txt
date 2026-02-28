@@ -1,0 +1,69 @@
+Build "TaskFlow" — a fully interactive Kanban board single-page application using React 19 and TypeScript.
+
+## What It Does
+
+TaskFlow is a personal task management board with draggable cards organized into customizable columns. All data persists in the browser via localStorage — no backend required.
+
+## Requirements
+
+### Core Features
+
+1. **Columns**: The board starts with three default columns — "To Do", "In Progress", and "Done". Users can add new columns, rename them, reorder them, and delete them (with confirmation if the column contains cards).
+
+2. **Cards**: Each card has:
+   - Title (required, max 100 characters)
+   - Description (optional, supports basic Markdown — bold, italic, links, lists)
+   - Priority: low, medium, high (displayed with color-coded indicator)
+   - Tags: zero or more user-defined string tags
+   - Created timestamp
+   - Due date (optional, highlight overdue cards visually)
+
+3. **Drag and Drop**: Users can drag cards between columns and reorder cards within a column. The drag interaction must provide clear visual feedback — a visible placeholder or ghost element showing where the card will land.
+
+4. **Search and Filter**: A top bar with:
+   - A search input that filters cards by title and description (case-insensitive, real-time)
+   - Filter by priority (multi-select: show only high, medium, or low)
+   - Filter by tag (multi-select from all existing tags)
+   - When filters are active, non-matching cards should be visually dimmed, not removed from the DOM (so the board layout stays stable)
+
+5. **Persistence**: All board state (columns, cards, their order) is saved to `localStorage` on every change. On reload, the board restores exactly as the user left it. Handle corrupted or missing localStorage data gracefully — fall back to the default empty board.
+
+6. **Undo**: Support Ctrl+Z / Cmd+Z to undo the last action (card move, card delete, column delete, card edit). Maintain a history stack of at least 20 actions.
+
+### UI / UX Requirements
+
+- **Responsive**: The board scrolls horizontally on narrow viewports. Columns stack vertically below 640px.
+- **Keyboard accessible**: All CRUD operations must be reachable via keyboard. Cards must be focusable and movable between columns with keyboard shortcuts (e.g., Alt+Arrow to move a card left/right). Column and card actions must work with Enter/Space.
+- **ARIA**: Use appropriate ARIA roles and live regions so screen readers announce drag results and filter state.
+- **Animations**: Smooth transitions for card movement, column reorder, and card creation/deletion. Use CSS transitions or Framer Motion — not abrupt DOM swaps.
+- **Dark mode**: Support system-preference dark mode via `prefers-color-scheme`, with an optional manual toggle that persists to localStorage.
+
+### Technical Requirements
+
+- **React 19** with functional components only — no class components.
+- **TypeScript** in strict mode — no `any` types, no type assertions except where genuinely unavoidable (document each one).
+- **Vite** as the build tool.
+- **Tailwind CSS v4** for styling — no other CSS framework.
+- **No state management library** — use React context + useReducer for global board state. Custom hooks must encapsulate localStorage sync, drag-and-drop logic, keyboard shortcuts, and undo history.
+- Implement drag-and-drop with the **HTML5 Drag and Drop API** directly — do not use `react-beautiful-dnd`, `dnd-kit`, or similar libraries. This tests your understanding of the low-level browser API.
+- Use `react-markdown` (or a lightweight equivalent) for rendering Markdown in card descriptions.
+- **No other runtime dependencies** beyond React, ReactDOM, react-markdown, and Tailwind. Utility libraries like `clsx` or `nanoid` are acceptable.
+
+## Deliverable
+
+Provide the complete, runnable project:
+
+1. `package.json` — with all dependencies and scripts (`dev`, `build`, `preview`)
+2. `vite.config.ts` — Vite configuration with React plugin
+3. `tsconfig.json` — strict TypeScript config
+4. `tailwind.config.ts` — Tailwind configuration with dark mode support
+5. `index.html` — entry HTML
+6. `src/main.tsx` — React entry point
+7. `src/App.tsx` — root component
+8. `src/types/` — shared TypeScript types and interfaces
+9. `src/context/` — board state context and reducer
+10. `src/hooks/` — custom hooks (useLocalStorage, useDragAndDrop, useUndoHistory, useKeyboardShortcuts)
+11. `src/components/` — Board, Column, Card, SearchBar, FilterPanel, CardModal (for create/edit)
+12. `src/utils/` — helper functions (id generation, markdown rendering config, date formatting)
+
+The app must start with `npm install && npm run dev`. Do not use placeholder comments in place of real implementation.

@@ -16,6 +16,7 @@ import {
     sanitizeModelName,
     runConcurrent,
 } from "./utils.js";
+import { ProgressBar } from "./progress.js";
 
 const IDENTITY_PATTERNS = [
     /I('m| am) (an AI|a language model|an assistant) (made|trained|created|developed|built) by \w+/gi,
@@ -117,7 +118,9 @@ export async function evaluate(
     if (options?.tasks) {
         const notFound = options.tasks.filter((t) => !tasks.includes(t));
         if (notFound.length > 0) {
-            console.warn(`  Warning: tasks not found and will be skipped: ${notFound.join(", ")}`);
+            console.warn(
+                `  Warning: tasks not found and will be skipped: ${notFound.join(", ")}`,
+            );
         }
         tasks = tasks.filter((t) => options.tasks!.includes(t));
         if (tasks.length === 0) {
@@ -149,86 +152,95 @@ export async function evaluate(
         `\nEvaluating: ${tasks.length} tasks × ${modelDirs.length} models × ${config.setJ.length} judges = ${total} calls\n`,
     );
 
+    const progress = new ProgressBar(total);
     let completed = 0;
     let skipped = 0;
 
-    await runConcurrent(queue, config.maxConcurrency, async ({ task, modelDir, judge }) => {
-        const evalDir = resolve(evaluationsDir, task);
-        const evalPath = resolve(
-            evalDir,
-            `${modelDir}__${sanitizeModelName(judge)}.json`,
-        );
-
-        if (!options?.force && existsSync(evalPath)) {
-            skipped++;
-            console.log(
-                `  [skip] ${task} / ${modelDir} / ${judge} (already exists)`,
+    await runConcurrent(
+        queue,
+        config.maxConcurrency,
+        async ({ task, modelDir, judge }) => {
+            const evalDir = resolve(evaluationsDir, task);
+            const evalPath = resolve(
+                evalDir,
+                `${modelDir}__${sanitizeModelName(judge)}.json`,
             );
-            return;
-        }
 
-        const taskPrompt = readFileSync(
-            resolve(tasksDir, task, "prompt.txt"),
-            "utf-8",
-        ).trim();
-        const criteria = loadTaskCriteria(resolve(tasksDir, task));
-        const taskConfig = loadTaskConfig(resolve(tasksDir, task));
-        const rawResponse = readFileSync(
-            resolve(responsesDir, modelDir, `${task}.md`),
-            "utf-8",
-        );
-        const response = anonymize(rawResponse);
-        const responseNote = taskConfig?.systemPrompt
-            ? "This is a structured multi-file implementation. Evaluate the response holistically across all provided files."
-            : undefined;
+            if (!options?.force && existsSync(evalPath)) {
+                skipped++;
+                progress.skip();
+                progress.log(
+                    `  [skip] ${task} / ${modelDir} / ${judge} (already exists)`,
+                );
+                return;
+            }
 
-        const judgePrompt = buildJudgePrompt(
-            taskPrompt,
-            response,
-            criteria,
-            responseNote,
-        );
-
-        try {
-            const judgeRaw = await withRetry(async () => {
-                const result = await chatCompletion(judge, [
-                    { role: "user", content: judgePrompt },
-                ]);
-                // Validate parse-ability inside retry loop
-                parseJudgeResponse(result, judge);
-                return result;
-            });
-
-            const parsed = parseJudgeResponse(judgeRaw, judge);
-
-            const judgeScore: JudgeScore = {
-                judge,
-                reasoning: parsed.reasoning,
-                scores: parsed.scores,
-            };
-
-            // Validate with Zod
-            JudgeScoreSchema.parse(judgeScore);
-
-            ensureDir(evalDir);
-            writeFileSync(
-                evalPath,
-                JSON.stringify(judgeScore, null, 2),
+            progress.start();
+            const taskPrompt = readFileSync(
+                resolve(tasksDir, task, "prompt.txt"),
+                "utf-8",
+            ).trim();
+            const criteria = loadTaskCriteria(resolve(tasksDir, task));
+            const taskConfig = loadTaskConfig(resolve(tasksDir, task));
+            const rawResponse = readFileSync(
+                resolve(responsesDir, modelDir, `${task}.md`),
                 "utf-8",
             );
-            completed++;
-            console.log(
-                `  [done] ${task} / ${modelDir} / ${judge} (${completed + skipped}/${total})`,
-            );
-        } catch (err) {
-            const msg =
-                err instanceof Error ? err.message : String(err);
-            console.error(
-                `  [FAIL] ${task} / ${modelDir} / ${judge}: ${msg}`,
-            );
-        }
-    });
+            const response = anonymize(rawResponse);
+            const responseNote = taskConfig?.systemPrompt
+                ? "This is a structured multi-file implementation. Evaluate the response holistically across all provided files."
+                : undefined;
 
+            const judgePrompt = buildJudgePrompt(
+                taskPrompt,
+                response,
+                criteria,
+                responseNote,
+            );
+
+            try {
+                const judgeRaw = await withRetry(async () => {
+                    const result = await chatCompletion(judge, [
+                        { role: "user", content: judgePrompt },
+                    ]);
+                    // Validate parse-ability inside retry loop
+                    parseJudgeResponse(result, judge);
+                    return result;
+                });
+
+                const parsed = parseJudgeResponse(judgeRaw, judge);
+
+                const judgeScore: JudgeScore = {
+                    judge,
+                    reasoning: parsed.reasoning,
+                    scores: parsed.scores,
+                };
+
+                // Validate with Zod
+                JudgeScoreSchema.parse(judgeScore);
+
+                ensureDir(evalDir);
+                writeFileSync(
+                    evalPath,
+                    JSON.stringify(judgeScore, null, 2),
+                    "utf-8",
+                );
+                completed++;
+                progress.succeed();
+                progress.log(
+                    `  [done] ${task} / ${modelDir} / ${judge} (${completed + skipped}/${total})`,
+                );
+            } catch (err) {
+                const msg = err instanceof Error ? err.message : String(err);
+                progress.fail();
+                progress.log(
+                    `  [FAIL] ${task} / ${modelDir} / ${judge}: ${msg}`,
+                );
+            }
+        },
+    );
+
+    progress.finish();
     console.log(
         `\nEvaluation complete: ${completed} evaluated, ${skipped} skipped, ${total - completed - skipped} failed`,
     );
