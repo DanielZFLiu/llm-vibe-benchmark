@@ -50,6 +50,13 @@ export const EvaluationResultSchema = z.object({
 
 export type EvaluationResult = z.infer<typeof EvaluationResultSchema>;
 
+// --- CLI Run Options ---
+
+export interface RunOptions {
+    tasks?: string[];
+    force?: boolean;
+}
+
 // --- Aggregator Types ---
 
 export interface ModelStats {

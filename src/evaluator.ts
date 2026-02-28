@@ -4,6 +4,7 @@ import {
     type BenchmarkConfig,
     type Criterion,
     type JudgeScore,
+    type RunOptions,
     JudgeScoreSchema,
 } from "./schemas.js";
 import { loadTaskCriteria } from "./config.js";
@@ -104,12 +105,25 @@ function getResponseModels(responsesDir: string): string[] {
 export async function evaluate(
     config: BenchmarkConfig,
     rootDir: string,
+    options?: RunOptions,
 ): Promise<void> {
     const tasksDir = resolve(rootDir, config.tasksDir);
     const responsesDir = resolve(rootDir, config.responsesDir);
     const evaluationsDir = resolve(rootDir, config.evaluationsDir);
-    const tasks = discoverTasks(tasksDir);
+    let tasks = discoverTasks(tasksDir);
     const modelDirs = getResponseModels(responsesDir);
+
+    if (options?.tasks) {
+        const notFound = options.tasks.filter((t) => !tasks.includes(t));
+        if (notFound.length > 0) {
+            console.warn(`  Warning: tasks not found and will be skipped: ${notFound.join(", ")}`);
+        }
+        tasks = tasks.filter((t) => options.tasks!.includes(t));
+        if (tasks.length === 0) {
+            console.error("No valid tasks to run after filtering.");
+            return;
+        }
+    }
 
     if (modelDirs.length === 0) {
         console.error("No responses found. Run 'generate' first.");
@@ -144,7 +158,7 @@ export async function evaluate(
             `${modelDir}__${sanitizeModelName(judge)}.json`,
         );
 
-        if (existsSync(evalPath)) {
+        if (!options?.force && existsSync(evalPath)) {
             skipped++;
             console.log(
                 `  [skip] ${task} / ${modelDir} / ${judge} (already exists)`,

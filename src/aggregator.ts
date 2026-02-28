@@ -173,6 +173,22 @@ export function printLeaderboard(stats: ModelStats[]): void {
 }
 
 export function saveResults(stats: ModelStats[], outputPath: string): void {
-    writeFileSync(outputPath, JSON.stringify(stats, null, 2), "utf-8");
-    console.log(`Results saved to ${outputPath}`);
+    let existing: ModelStats[] = [];
+    if (existsSync(outputPath)) {
+        try {
+            existing = JSON.parse(readFileSync(outputPath, "utf-8"));
+        } catch {
+            console.warn(`  Warning: could not parse existing ${outputPath}, overwriting.`);
+        }
+    }
+
+    // Merge: existing entries are the base, new stats overwrite on model key
+    const merged = new Map<string, ModelStats>(existing.map((s) => [s.model, s]));
+    for (const stat of stats) {
+        merged.set(stat.model, stat);
+    }
+
+    const result = [...merged.values()].sort((a, b) => b.avgScore - a.avgScore);
+    writeFileSync(outputPath, JSON.stringify(result, null, 2), "utf-8");
+    console.log(`Results saved to ${outputPath} (${result.length} models)`);
 }

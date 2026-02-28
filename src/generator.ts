@@ -1,6 +1,6 @@
 import { existsSync, writeFileSync } from "fs";
 import { resolve } from "path";
-import { type BenchmarkConfig } from "./schemas.js";
+import { type BenchmarkConfig, type RunOptions } from "./schemas.js";
 import {
     chatCompletion,
     discoverTasks,
@@ -14,10 +14,23 @@ import {
 export async function generate(
     config: BenchmarkConfig,
     rootDir: string,
+    options?: RunOptions,
 ): Promise<void> {
     const tasksDir = resolve(rootDir, config.tasksDir);
     const responsesDir = resolve(rootDir, config.responsesDir);
-    const tasks = discoverTasks(tasksDir);
+    let tasks = discoverTasks(tasksDir);
+
+    if (options?.tasks) {
+        const notFound = options.tasks.filter((t) => !tasks.includes(t));
+        if (notFound.length > 0) {
+            console.warn(`  Warning: tasks not found and will be skipped: ${notFound.join(", ")}`);
+        }
+        tasks = tasks.filter((t) => options.tasks!.includes(t));
+        if (tasks.length === 0) {
+            console.error("No valid tasks to run after filtering.");
+            return;
+        }
+    }
 
     const total = config.setC.length * tasks.length;
     console.log(
@@ -38,7 +51,7 @@ export async function generate(
         const modelDir = resolve(responsesDir, sanitizeModelName(model));
         const outputPath = resolve(modelDir, `${task}.md`);
 
-        if (existsSync(outputPath)) {
+        if (!options?.force && existsSync(outputPath)) {
             skipped++;
             console.log(`  [skip] ${model} / ${task} (already exists)`);
             return;
