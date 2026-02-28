@@ -1,0 +1,12 @@
+{
+  "judge": "google/gemini-3.1-pro-preview",
+  "reasoning": "The response is an exceptional system design document that perfectly adheres to the constraints. \n\nFor encryption soundness, it correctly employs the Signal Protocol (Double Ratchet, X3DH) to guarantee forward secrecy and post-compromise security. It appropriately uses Sender Keys for efficiently handling 50-person group chats and strictly maintains server-blindness by relying on manual or social key recovery for device restoration. \n\nThe architecture is right-sized for ~1,000 users (Go binary, Postgres, WebSockets, Redis for presence) and avoids gratuitous over-engineering, while effectively communicating the structure via an ASCII diagram.\n\nThe invite system is robust: relying on high-entropy UUIDs mapped in the database to establish an auditable trust tree without leaking pre-join communication, complete with rate-limiting and cascade revocation logic.\n\nThe threat model explicitly defines the trust boundary, cleanly separating server-observable metadata from cryptographically opaque ciphertext, and accurately assesses the blast radius of DB exfiltration and device theft. \n\nSelf-hosting practicality is addressed with a highly realistic Docker Compose setup, explicitly identifying all external dependencies (SMTP, reverse proxy, storage) and feasible backup/monitoring strategies.\n\nThe design depth is outstanding, featuring a clearly annotated SQL schema differentiating plaintext and encrypted fields, specific WebSocket JSON payloads, and a concrete protocol for offline message syncing.",
+  "scores": {
+    "encryption_soundness": 95,
+    "architecture_fitness": 95,
+    "invite_system_design": 95,
+    "security_model": 95,
+    "self_hosting_practicality": 95,
+    "design_depth_and_precision": 95
+  }
+}

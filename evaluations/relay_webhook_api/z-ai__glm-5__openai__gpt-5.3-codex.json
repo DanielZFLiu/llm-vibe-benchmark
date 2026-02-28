@@ -1,0 +1,12 @@
+{
+  "judge": "openai/gpt-5.3-codex",
+  "reasoning": "The submission is close to runnable and largely complete: it targets net10.0, uses Minimal APIs, defines all 5 required endpoints, persists events/subscriptions/delivery attempts with EF Core + SQLite, uses a Channel plus BackgroundService for async fan-out, computes HMAC-SHA256 signature correctly, and initializes the DB on startup. However, several requirement-level gaps reduce scores. The rate limiter is not actually per-IP (it is a single fixed-window limiter shared globally). Retry behavior is implemented with Microsoft.Extensions.Http.Resilience, but ShouldHandle retries all non-success responses, so 4xx responses are retried (contrary to the transient-only expectation). Retry timing is also not exact due to jitter enabled, and the requested backoff sequence is not strictly matched. Error handling uses ProblemDetails objects in many places, but the implementation uses Results rather than TypedResults as requested by the idiom rubric. Background worker/channel wiring is solid and cancellation-aware, with a drain attempt in StopAsync, though shutdown/drain behavior is somewhat complex and may not be perfectly deterministic under concurrency. Data model and EF configuration are strong overall, with appropriate relationships and indexes. Code organization is clean, logging is structured and meaningful, and API-layer validation for URL/event type/payload size is present (payload size check uses string length, not true byte count).",
+  "scores": {
+    "correctness_and_completeness": 74,
+    "dotnet10_idioms": 68,
+    "background_service_and_channels": 82,
+    "resilience_and_retry": 58,
+    "data_model_and_ef_core": 88,
+    "code_quality_and_structure": 80
+  }
+}

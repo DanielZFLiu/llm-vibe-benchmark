@@ -1,0 +1,12 @@
+{
+  "judge": "openai/gpt-5.3-codex",
+  "reasoning": "The submission is well-structured and close to runnable, with all required files and all five minimal API endpoints present. Core flow exists: subscriptions are stored, events are persisted, matching subscriptions are found, delivery attempts are enqueued to a Channel, and a BackgroundService processes them asynchronously. HMAC signature generation is correctly implemented over raw JSON payload using HMAC-SHA256 hex encoding.\n\nHowever, several requirement-level issues reduce correctness. The project targets net10.0 but uses 9.0 package versions (not EF Core/OpenAPI 10). Rate limiting is not partitioned per IP; the configured fixed-window limiter is global. The 429 limiter rejection path returns only a status code, not ProblemDetails. Retry/dead-letter behavior has important flaws: retry config likely does not map cleanly to the required exact 5-attempt semantics, 4xx handling is not explicitly constrained, and attempt tracking via a DelegatingHandler is likely positioned so it may not increment on each retry attempt, which can prevent proper transition to failed after exhaustion. That impacts delivery status correctness materially.\n\nBackground worker and channel usage are generally correct, but graceful shutdown draining is weak: ExecuteAsync reads with the stopping token, so cancellation can interrupt queued work instead of reliably draining in-flight/pending deliveries. EF entities and indexes are mostly good, async/cancellation is used broadly, and EnsureCreated satisfies initialization, though explicit migrations were requested as preferred option.\n\nOverall: strong scaffold and mostly idiomatic minimal API design, but retry/dead-letter accounting, per-IP limiter behavior, and full ProblemDetails coverage prevent a high score.",
+  "scores": {
+    "correctness_and_completeness": 58,
+    "dotnet10_idioms": 72,
+    "background_service_and_channels": 66,
+    "resilience_and_retry": 46,
+    "data_model_and_ef_core": 78,
+    "code_quality_and_structure": 81
+  }
+}

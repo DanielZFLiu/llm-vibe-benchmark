@@ -1,0 +1,12 @@
+{
+  "judge": "openai/gpt-5.3-codex",
+  "reasoning": "The submission is well-structured and covers all requested files/endpoints, but there are critical functional and compile-time issues that significantly reduce completeness. Major blockers: (1) `DeliveryWorker` is only registered via `AddHostedService<DeliveryWorker>()` but injected directly into the `/events` endpoint, which is not resolvable by DI unless separately registered; (2) `StopAsync` contains `await` inside `lock`, which is a C# compile error; (3) rate limiting is misconfigured by calling `.RequireRateLimiting(\"fixed\")` without defining a named policy `fixed`; (4) event delivery body/signature use the full event JSON request instead of just the event payload, violating requirements; (5) retry behavior does not match spec fully (configuration appears incorrect, likely compile issue in `HandleResult<(HttpResponseMessage)>`, retries non-success including 4xx, and backoff sequence does not clearly implement 1/2/4/8/16 via HTTP resilience alone). On the positive side, Minimal APIs are used, OpenAPI metadata is attached to all endpoints, Channel + BackgroundService pattern is present, EF entities/relationships are generally correct, and basic validation/logging/problem responses exist. However, due to the compile/runtime flaws and requirement mismatches, the implementation does not meet the task bar end-to-end.",
+  "scores": {
+    "correctness_and_completeness": 18,
+    "dotnet10_idioms": 55,
+    "background_service_and_channels": 35,
+    "resilience_and_retry": 30,
+    "data_model_and_ef_core": 70,
+    "code_quality_and_structure": 62
+  }
+}

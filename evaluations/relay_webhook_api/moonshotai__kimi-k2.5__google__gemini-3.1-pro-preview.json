@@ -1,0 +1,12 @@
+{
+  "judge": "google/gemini-3.1-pro-preview",
+  "reasoning": "The implementation hits many of the structural requirements: it is split into correct files, exclusively uses Minimal APIs, correctly configures EF Core with SQLite, applies RateLimiting, and sets up OpenAPI. The HMAC-SHA256 signature logic and API validations (URL, Payload size, string formats) are properly implemented. However, it suffers from several deep logical, concurrency, and behavioral flaws due to standard LLM blind spots.\n\n1. Channels/EF Core Race Condition: During POST /events, the code writes `attempt.Id` to the `Channel` before calling `SaveChangesAsync` and `CommitAsync`. The background worker instantly picks up the ID, queries the database, fails to find the uncommitted row, and discards it. The row is then committed and remains 'Pending' forever.\n\n2. Retry Tracking Flaw: `DeliveryAttemptTrackingHandler` is registered outside `AddResilienceHandler`. The resilience handler wraps the primary retry loop. Consequently, `SendAsync` on the TrackingHandler triggers only *once* for the entire retry batch. `attempt.AttemptCount` is incremented to 1 and never tracks the internal retries. When the resilience cycle ultimately fails, `UpdateDeliveryStatusAsync` checks `if (attempt.AttemptCount >= 5)`, evaluates to false (as it is 1), and abandons the record in a 'Pending' status rather than correctly marking it as 'Failed' (dead-lettered).\n\n3. Graceful Shutdown Aborts Draining: In `DeliveryWorker.StopAsync`, the LLM properly completes the channel writer, but then calls `await base.StopAsync(cancellationToken)`. The base class behaves by canceling the `stoppingToken` used by the `IHostedService`. `_channel.Reader.ReadAllAsync(stoppingToken)` immediately throws `OperationCanceledException` and aborts reading, completely failing the explicit instruction to 'drain in-flight deliveries on StopAsync rather than abandoning them'.\n\n4. Error Details: 429 Too Many Requests response under uses `OnRejected` strictly to change the status code, bypassing the RFC 9457 `ProblemDetails` instruction for this specific flow.\n\nDespite these crucial runtime concurrency and architectural flaws, the data modeling, structured logging usage, DTO projection, and DI setup are excellent, typical for an intermediate-level .NET implementation.",
+  "scores": {
+    "correctness_and_completeness": 65,
+    "dotnet10_idioms": 85,
+    "background_service_and_channels": 60,
+    "resilience_and_retry": 60,
+    "data_model_and_ef_core": 95,
+    "code_quality_and_structure": 85
+  }
+}

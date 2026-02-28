@@ -1,0 +1,12 @@
+{
+  "judge": "google/gemini-3.1-pro-preview",
+  "reasoning": "The response provides a well-structured application but has a few major flaws and misunderstandings. \n\nStarting with correctness: The primary issue is that `RequireRateLimiting(\"fixed\")` is called on the `/events` endpoint, but the rate limit policy \"fixed\" is never defined (it is instead incorrectly configured as a `GlobalLimiter`). This will throw an InvalidOperationException at runtime, breaking the main publishing endpoint. Additionally, the event \"payload\" stored and hashed includes the entire original JSON wrapper rather than just the inner payload.\n\nFor .NET 10 idioms: Minimal APIs are correctly used, as well as OpenAPI metadata. However, it returns `Results.*` from un-typed endpoints instead of specifically leveraging `TypedResults.*` for strictly typed routing, and the rate limiting middleware is improperly registered.\n\nBackground Service and Channels: The implementation correctly wires an UnboundedChannel and uses `Task.Run` to fork worker deliveries, keeping the channel reader loop unblocked. However, the shutdown logic is slightly flawed: `ReadAllAsync(stoppingToken)` will throw when cancellation is signaled, breaking out of the loop and preventing the graceful drain attempt in `StopAsync` from actually clearing the queue.\n\nResilience and Retry: The implementation shows confusion between using Polly (`Microsoft.Extensions.Http.Resilience`) and a manual backoff worker queue. It implements both! Polly handles the 5 attempts within a single `ExecuteAsync` context, meaning the thread loop blocks (asynchronously) until all 5 attempts fail. Resulting `attemptCount` jumps directly to 5, skipping the custom Requeue logic entirely. Furthermore, the delay calculation evaluates to (0.5s, 1s, 2s, 4s), completely missing the 8s and 16s requirements and retrying on 4xx errors.\n\nData model and EF Core check out very well; correct schemas, configurations, indexes, and async querying.\n\nCode structure is clean, cleanly separating concerns and employing structured logging correctly.",
+  "scores": {
+    "correctness_and_completeness": 70,
+    "dotnet10_idioms": 70,
+    "background_service_and_channels": 80,
+    "resilience_and_retry": 60,
+    "data_model_and_ef_core": 95,
+    "code_quality_and_structure": 85
+  }
+}

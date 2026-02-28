@@ -1,0 +1,12 @@
+{
+  "judge": "openai/gpt-5.3-codex",
+  "reasoning": "Overall, this is a strong and mostly complete design that maps well to the prompt’s constraints. For encryption, it uses recognized building blocks (X3DH + Double Ratchet) and describes key lifecycle, storage, and server-blind ciphertext relay; however, the group scheme is only “MLS-inspired” rather than a precise, proven construction, and there are a few consistency gaps (e.g., read-receipt privacy handling, web client trust risks if server serves malicious JS). Architecture is right-sized for 1,000 users (single server, Go, SQLite, WebSocket, local blob storage) with clear component boundaries and a readable diagram. Invite design is end-to-end: generation, validation, one-time use, expiry, revocation, chain auditability, and abuse controls are covered; transfer resistance is limited in practice (as expected) and cascade behavior is intentionally non-cascading. Security model is explicit about metadata visibility, DB exfiltration impact, and compromised-device blast radius, plus clear limits of invite guarantees. Self-hosting guidance is practical (Docker Compose, TLS/domain/SMTP dependencies, backup/restore, health metrics), though some operational details are somewhat optimistic or light. Depth is good across all required sections, with concrete schema/protocol sketches and explicit trade-offs, despite a few cryptographic and implementation ambiguities.",
+  "scores": {
+    "encryption_soundness": 79,
+    "architecture_fitness": 88,
+    "invite_system_design": 86,
+    "security_model": 86,
+    "self_hosting_practicality": 84,
+    "design_depth_and_precision": 87
+  }
+}

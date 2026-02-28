@@ -1,0 +1,12 @@
+{
+  "judge": "google/gemini-3.1-pro-preview",
+  "reasoning": "The LLM produced a cleanly organized solution that largely meets the core functional requirements but fails on a few specific technical constraints.\n\nCorrectness and Completeness: Endpoint routing, database usage, and HMAC generation for webhooks are implemented correctly. All 5 endpoints run efficiently. However, the background delivery loops through a given event's subscriptions sequentially. If one endpoint is offline, retrying for ~30 seconds will block delivery to other subscribers. It also uses a manual approach to enforce payload limits. \n\n.NET 10 Idioms: Excellent usage of Minimal APIs, `Microsoft.AspNetCore.OpenApi`, `Microsoft.AspNetCore.RateLimiting`, `TypedResults`, and RFC 9457 `ProblemDetails`. Idiomatic routing and extension usages are clearly present.\n\nBackground Service and Channels: `System.Threading.Channels` is successfully used to hand off events asynchronously to the `DeliveryWorker`. However, graceful shutdown is poorly handled. `StopAsync` completes the channel writer but immediately calls `base.StopAsync(cancellationToken)`, which cancels the execution token and aborts the channel reader immediately, abandoning in-flight deliveries instead of draining them.\n\nResilience and Retry: The model failed explicitly on the negative constraints. It was instructed to use `Microsoft.Extensions.Http.Resilience` and explicitly told *\"not manual retry loops\"*. Instead, it implemented a full manual retry loop inside `DeliveryService.cs` (`for` loop with `Task.Delay`), altogether ignoring the HTTP resilience library.\n\nData Model and EF Core: Modeled perfectly with `Subscription`, `Event`, and `DeliveryAttempt`. The relationships, database indexes, async configurations, and context registrations are correct.\n\nCode Quality and Structure: Logging uses structured parameters consistently. The code is readable and organized neatly separated across required files. Validation exists. However, naive 64 KB validation (reading the entire stream into a string in memory) leaves the app vulnerable to memory exhaustion, and sequential iterations for subscriber delivery hurts fan-out latency.",
+  "scores": {
+    "correctness_and_completeness": 80,
+    "dotnet10_idioms": 95,
+    "background_service_and_channels": 70,
+    "resilience_and_retry": 35,
+    "data_model_and_ef_core": 95,
+    "code_quality_and_structure": 80
+  }
+}

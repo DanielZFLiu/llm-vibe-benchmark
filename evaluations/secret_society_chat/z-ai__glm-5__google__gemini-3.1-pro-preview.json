@@ -1,0 +1,12 @@
+{
+  "judge": "google/gemini-3.1-pro-preview",
+  "reasoning": "The response provides an exceptionally well-thought-out system design that perfectly matches the scale and constraints of the prompt. It chooses a strictly 'right-sized' stack (Go, Postgres, WebSockets, Caddy) that is trivial to self-host for a community of 1,000 users. The End-to-End Encryption section is rigorous, correctly leveraging the Signal Protocol (X3DH, Double Ratchet, Sender Keys for groups) and strictly maintaining the server's blindness to payload content. The real-time protocol demonstrates deep understanding by suggesting that typing indicators be sent as encrypted E2E control messages to prevent traffic analysis by the server. The data model explicitly separates plaintext metadata from encrypted blobs. However, the response missed the explicit prompt requirement to detail 'what an admin needs to monitor to know the system is healthy' within the Ops section. Additionally, there is a generation artifact where the text repeats itself near the end, though the actual content remains comprehensive and answers almost all prompt requirements with high precision.",
+  "scores": {
+    "encryption_soundness": 98,
+    "architecture_fitness": 98,
+    "invite_system_design": 95,
+    "security_model": 95,
+    "self_hosting_practicality": 85,
+    "design_depth_and_precision": 90
+  }
+}

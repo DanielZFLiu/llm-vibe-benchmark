@@ -1,0 +1,12 @@
+{
+  "judge": "google/gemini-3.1-pro-preview",
+  "reasoning": "The response provides an outstanding system design document that meticulously addresses every requirement in the prompt. \n\nFor Architecture Fitness: The choice of a Go single-binary backend with an SQLite database is exceptionally well-tailored to the constraint of 1,000 users on a single self-hosted VPS, demonstrating a deep understanding of right-sizing. The PWA choice minimizes deployment friction.\n\nFor Encryption Soundness: It correctly leverages standard, proven protocols (Signal's X3DH and Double Ratchet, with MLS for groups), achieving forward secrecy. It provides a sound, practical key-recovery mechanism (passphrase-encrypted backup) that maintains server blindness.\n\nFor the Invite System: The lifecycle is thoroughly documented, including a clever token-exchange mechanism to decouple invite validation from registration, an auditable chain via database relations, clear abuse limits (rate limiting, single-use), and defined revocation effects.\n\nFor the Security Model: The threat model perfectly outlines the exact boundaries of what a malicious server operator can and cannot observe (the metadata vs. content distinction), specifically addressing DB exfiltration and the blast radius of single-device compromise.\n\nFor Self-Hosting Practicality: The operational guidance includes a functional Docker Compose outline, clear enumeration of external dependencies (domain, TLS, SMTP), a pragmatic backup strategy perfectly complemented by the SQLite choice, and actionable monitoring metrics for the admin.\n\nFor Design Depth and Precision: Section by section, the structural depth is excellent. The database schema explicitly demarcates client-side encrypted fields, the WebSocket protocol explains message routing and offline sync, and the document concludes with a highly mature list of explicit trade-offs. It's a cohesive, robust, and highly practical engineering document.",
+  "scores": {
+    "encryption_soundness": 95,
+    "architecture_fitness": 98,
+    "invite_system_design": 95,
+    "security_model": 100,
+    "self_hosting_practicality": 95,
+    "design_depth_and_precision": 98
+  }
+}
