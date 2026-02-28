@@ -36,8 +36,9 @@ node dist/index.js run        # all three in sequence
 ### Options
 
 ```
---tasks <t1,t2,...>   Only run the specified task names (comma-separated)
---force               Overwrite existing outputs instead of skipping them
+--tasks <t1,t2,...>    Only run the specified task names (comma-separated)
+--models <m1,m2,...>   Only run the specified Set C models (comma-separated, partial match)
+--force                Overwrite existing outputs instead of skipping them
 ```
 
 Examples:
@@ -50,6 +51,12 @@ node dist/index.js run --tasks secret_society_chat --force
 
 # Generate for multiple specific tasks
 node dist/index.js generate --tasks relay_webhook_api,secret_society_chat
+
+# Run only specific models (partial match — "deepseek" matches "deepseek/deepseek-v3.2")
+node dist/index.js run --models deepseek,qwen
+
+# Combine filters: one model, one task
+node dist/index.js run --tasks relay_webhook_api --models step-3.5
 ```
 
 ## Dashboard

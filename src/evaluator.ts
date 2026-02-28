@@ -129,7 +129,21 @@ export async function evaluate(
         }
     }
 
-    if (modelDirs.length === 0) {
+    let filteredModelDirs = modelDirs;
+    if (options?.models) {
+        const patterns = options.models.map((m) => m.toLowerCase());
+        filteredModelDirs = modelDirs.filter((d) =>
+            patterns.some((p) => d.toLowerCase().includes(p)),
+        );
+        if (filteredModelDirs.length === 0) {
+            console.error(
+                `No response models matched: ${options.models.join(", ")}`,
+            );
+            return;
+        }
+    }
+
+    if (filteredModelDirs.length === 0) {
         console.error("No responses found. Run 'generate' first.");
         return;
     }
@@ -137,7 +151,7 @@ export async function evaluate(
     // Build work queue: task × model × judge
     const queue: { task: string; modelDir: string; judge: string }[] = [];
     for (const task of tasks) {
-        for (const modelDir of modelDirs) {
+        for (const modelDir of filteredModelDirs) {
             const responsePath = resolve(responsesDir, modelDir, `${task}.md`);
             if (!existsSync(responsePath)) continue;
 
@@ -149,7 +163,7 @@ export async function evaluate(
 
     const total = queue.length;
     console.log(
-        `\nEvaluating: ${tasks.length} tasks × ${modelDirs.length} models × ${config.setJ.length} judges = ${total} calls\n`,
+        `\nEvaluating: ${tasks.length} tasks × ${filteredModelDirs.length} models × ${config.setJ.length} judges = ${total} calls\n`,
     );
 
     const progress = new ProgressBar(total);

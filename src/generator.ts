@@ -36,9 +36,23 @@ export async function generate(
         }
     }
 
-    const total = config.setC.length * tasks.length;
+    let models = config.setC;
+    if (options?.models) {
+        const patterns = options.models.map((m) => m.toLowerCase());
+        models = models.filter((m) =>
+            patterns.some((p) => m.toLowerCase().includes(p)),
+        );
+        if (models.length === 0) {
+            console.error(
+                `No models matched: ${options.models.join(", ")}`,
+            );
+            return;
+        }
+    }
+
+    const total = models.length * tasks.length;
     console.log(
-        `\nGenerating responses: ${config.setC.length} models × ${tasks.length} tasks = ${total} calls\n`,
+        `\nGenerating responses: ${models.length} models × ${tasks.length} tasks = ${total} calls\n`,
     );
 
     const progress = new ProgressBar(total);
@@ -46,7 +60,7 @@ export async function generate(
     let skipped = 0;
 
     const queue: { model: string; task: string }[] = [];
-    for (const model of config.setC) {
+    for (const model of models) {
         for (const task of tasks) {
             queue.push({ model, task });
         }

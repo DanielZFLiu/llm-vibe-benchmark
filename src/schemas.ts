@@ -55,6 +55,7 @@ export type EvaluationResult = z.infer<typeof EvaluationResultSchema>;
 
 export interface RunOptions {
     tasks?: string[];
+    models?: string[];
     force?: boolean;
 }
 

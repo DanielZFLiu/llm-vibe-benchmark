@@ -12,8 +12,13 @@ function parseOptions(args: string[]): RunOptions {
         tasksIdx !== -1
             ? args[tasksIdx + 1]?.split(",").map((s) => s.trim()).filter(Boolean)
             : undefined;
+    const modelsIdx = args.indexOf("--models");
+    const models =
+        modelsIdx !== -1
+            ? args[modelsIdx + 1]?.split(",").map((s) => s.trim()).filter(Boolean)
+            : undefined;
     const force = args.includes("--force");
-    return { tasks, force };
+    return { tasks, models, force };
 }
 
 async function main(): Promise<void> {
@@ -31,8 +36,9 @@ Commands:
   run        Run all steps: generate → evaluate → report
 
 Options:
-  --tasks <t1,t2,...>   Only run the specified task names (comma-separated)
-  --force               Overwrite existing outputs instead of skipping them
+  --tasks <t1,t2,...>    Only run the specified task names (comma-separated)
+  --models <m1,m2,...>   Only run the specified Set C models (comma-separated, partial match)
+  --force                Overwrite existing outputs instead of skipping them
 `);
         return;
     }
