@@ -1,0 +1,70 @@
+You are designing "Secret Society" — a self-hosted, invite-only, end-to-end encrypted chat application for a community of up to 1,000 trusted members.
+
+## Context & Constraints
+
+- **Scale:** ~1,000 concurrent registered users. Not a product; no growth plans. Right-sizing is a virtue.
+- **Self-hosted:** Must be deployable by a technically competent (but not infrastructure-specialist) individual on a single VPS or small server. Complexity should match this reality.
+- **Invite-only:** Membership is tightly controlled. Existing members invite new ones. The invite chain must be auditable.
+- **E2E encrypted:** The server must be architecturally incapable of reading message content. This is a hard requirement, not a nice-to-have.
+- **Ephemeral-friendly:** Messages may optionally self-destruct. Disappearing message support should be built into the design.
+
+## Required Features
+
+- 1:1 direct messages and small group chats (up to 50 members)
+- Text messages; optional: file/image sharing (design for it, even if deferred)
+- Online presence indicators (last seen / typing indicators)
+- Message delivery and read receipts
+- Member directory (display name, avatar — no real names required)
+- Admin panel: revoke memberships, view invite tree, manage groups
+
+## Your Task
+
+Produce a thorough system design document covering:
+
+### 1. Architecture Overview
+Describe the major components (client app, server, database, any auxiliary services). Justify your technology choices relative to the constraints. Include a component diagram (ASCII or described clearly). Explain what runs where.
+
+### 2. End-to-End Encryption Design
+Specify the exact cryptographic scheme. Address:
+- Key generation and identity keys per user
+- Key exchange protocol for initiating a conversation (1:1 and group)
+- Forward secrecy: how is it achieved? What happens if a long-term key is compromised?
+- How are encrypted messages stored and retrieved from the server?
+- How does a user restore their keys on a new device?
+- What does the server actually store, and what can it observe?
+
+### 3. Invite System
+Design the full invite lifecycle:
+- How does a member generate an invite? What form does it take?
+- How is an invite validated without the server learning who was invited before they join?
+- How is the invite chain recorded so admins can trace who invited whom?
+- How are invites revoked, and what happens to the chain when a member is removed?
+- What prevents invite abuse (mass generation, transferring invites, replay attacks)?
+
+### 4. Data Model
+Sketch the core database schema. Include the key tables/collections, important fields, and call out which fields are encrypted client-side and which are plaintext on the server.
+
+### 5. Real-Time Protocol
+Describe the client–server communication layer:
+- What transport protocol? (WebSocket, SSE, long-poll, etc.) Why?
+- How are messages routed from sender to recipient(s) through the server without the server reading them?
+- How are presence signals and typing indicators handled?
+- How does a client that was offline receive messages it missed?
+
+### 6. Self-Hosting & Operations
+Provide a realistic deployment story:
+- What does the server stack look like? (Docker Compose, bare metal, etc.)
+- External dependencies (DNS, SMTP for invites, storage for media, TLS)?
+- Backup and restore strategy for the database and user key material
+- What does an admin need to monitor to know the system is healthy?
+
+### 7. Threat Model
+State explicitly:
+- What can a malicious server operator observe? What can they not?
+- What happens if the server database is exfiltrated?
+- What is the blast radius if a single member's device is compromised?
+- What attacks does the invite system defend against and which does it not?
+
+## Deliverable
+
+A clear, well-organized design document. Depth and precision are valued over breadth. Where you make a deliberate trade-off, state it explicitly.

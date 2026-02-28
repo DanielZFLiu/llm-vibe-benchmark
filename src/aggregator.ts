@@ -1,4 +1,4 @@
-import { existsSync, readdirSync, readFileSync } from "fs";
+import { existsSync, readdirSync, readFileSync, writeFileSync } from "fs";
 import { resolve } from "path";
 import type { JudgeScore, ModelStats } from "./schemas.js";
 
@@ -170,4 +170,9 @@ export function printLeaderboard(stats: ModelStats[]): void {
     }
 
     console.log("");
+}
+
+export function saveResults(stats: ModelStats[], outputPath: string): void {
+    writeFileSync(outputPath, JSON.stringify(stats, null, 2), "utf-8");
+    console.log(`Results saved to ${outputPath}`);
 }

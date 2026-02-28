@@ -1,0 +1,34 @@
+{
+  "criteria": [
+    {
+      "name": "encryption_soundness",
+      "description": "Is the E2E encryption scheme cryptographically correct and complete? Does it use a proven protocol or a well-reasoned custom scheme? Does it achieve forward secrecy? Is key management (generation, exchange, device restore, group keys) fully addressed? Does the server remain architecturally incapable of reading message content?",
+      "rubric": "90-100: Uses a proven protocol (e.g. Signal/Double Ratchet, X3DH) or a clearly justified equivalent; achieves per-message forward secrecy; correctly handles group key distribution; addresses device restore without compromising server-blindness; server stores only ciphertext. 60-80: Sound encryption with minor gaps — e.g. forward secrecy described but group key rotation missing, or device restore hand-waved. 30-59: Encryption is present but flawed — e.g. symmetric key shared via server, no key rotation, or server could decrypt with key material it holds. 0-29: E2E encryption is absent, superficially described, or fundamentally broken (server can read messages)."
+    },
+    {
+      "name": "architecture_fitness",
+      "description": "Is the architecture appropriately sized for ~1,000 users on a self-hosted VPS? Are technology choices justified relative to the constraints? Is there a clear component diagram or description? Does the design avoid both dangerous under-engineering and gratuitous over-engineering?",
+      "rubric": "90-100: Clear component breakdown with justified tech choices; right-sized (e.g. single-node Postgres + WebSocket server, not Kafka+Kubernetes); each choice is motivated by a real constraint; includes a readable component diagram. 60-80: Reasonable architecture with mostly appropriate choices but one or two are unjustified or slightly over/under-engineered. 30-59: Architecture is plausible but poorly justified, significantly over-engineered for the stated scale, or missing major components. 0-29: Architecture is naive (single PHP file, no persistence), incoherent, or not described."
+    },
+    {
+      "name": "invite_system_design",
+      "description": "Is the full invite lifecycle designed? Does it cover: generation, distribution, validation, chain auditability, revocation, and downstream effects when a member is removed? Does it defend against abuse (mass generation, replay attacks, invite transfer)?",
+      "rubric": "90-100: Covers the full lifecycle — cryptographically signed or token-based invites, one-time use enforcement, chain recorded on server (but ideally not revealing pre-join identity), revocation cascades described, abuse mitigations (rate limiting, invite quotas, replay prevention) present. 60-80: Covers generation, validation, and basic revocation but misses cascade behavior, abuse prevention, or chain auditability. 30-59: Invite system exists but is naive — e.g. just a shareable link with no expiry, no revocation, no chain. 0-29: Invite system is absent or trivially bypassable."
+    },
+    {
+      "name": "security_model",
+      "description": "Does the design explicitly state the trust boundary? Does it articulate what a malicious server operator can and cannot observe? Does it address: server database exfiltration, single member device compromise, and the limits of the invite system's guarantees?",
+      "rubric": "90-100: Explicit trust model — enumerates what server observes (metadata: who talks to whom, timing, group membership) vs. what it cannot (message content, plaintext keys); addresses DB exfiltration scenario; describes blast radius of a compromised member device; states which attacks invite system does and does not prevent. 60-80: Good server-blind design and partial threat model — one or two scenarios (e.g. device compromise or DB exfiltration) underdeveloped. 30-59: Acknowledges E2E encryption but does not reason about metadata leakage, server trust, or specific compromise scenarios. 0-29: No meaningful threat model; security properties are asserted without justification."
+    },
+    {
+      "name": "self_hosting_practicality",
+      "description": "Can a technically competent but non-infrastructure-specialist realistically deploy and operate this? Are all external dependencies identified? Is there a backup/restore strategy? Is the operational surface area (monitoring, updates, key rotation) described?",
+      "rubric": "90-100: Concrete deployment story (e.g. Docker Compose file sketch, dependency list, environment variables); identifies all external dependencies (TLS, SMTP, object storage); provides backup and restore procedure for database and any key material; describes what to monitor; runbook-level operational guidance. 60-80: Deployable design with Docker or equivalent, but missing backup strategy, monitoring guidance, or one significant external dependency unaddressed. 30-59: Deployment story exists but is vague ('deploy to a VPS'), lacks specifics on dependencies, or requires undocumented expertise. 0-29: No deployment guidance; system cannot be realistically self-hosted as described."
+    },
+    {
+      "name": "design_depth_and_precision",
+      "description": "Does the response go beyond surface-level descriptions? Are trade-offs explicitly stated? Is the data model sketched? Is the real-time protocol specified (transport, message routing, offline delivery)? Does it cover all 7 required sections with meaningful substance?",
+      "rubric": "90-100: All 7 sections addressed with genuine depth; data model includes table/field sketch with clear annotation of encrypted vs. plaintext fields; real-time protocol specifies transport, routing, and offline delivery; trade-offs are explicitly reasoned (e.g. 'we chose X over Y because at 1,000 users Z is not a bottleneck'). 60-80: Most sections covered with good depth; one or two (commonly real-time protocol or data model) treated shallowly. 30-59: Design hits the major topics but stays high-level throughout — reads like a list of buzzwords rather than an engineering document. 0-29: Significant sections are absent or the document is a superficial overview with no actionable detail."
+    }
+  ]
+}

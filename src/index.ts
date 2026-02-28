@@ -2,7 +2,7 @@ import { resolve } from "path";
 import { loadConfig } from "./config.js";
 import { generate } from "./generator.js";
 import { evaluate } from "./evaluator.js";
-import { aggregate, printLeaderboard } from "./aggregator.js";
+import { aggregate, printLeaderboard, saveResults } from "./aggregator.js";
 
 async function main(): Promise<void> {
     const command = process.argv[2];
@@ -27,6 +27,9 @@ Commands:
         const evaluationsDir = resolve(rootDir, config.evaluationsDir);
         const stats = aggregate(evaluationsDir);
         printLeaderboard(stats);
+        if (stats.length > 0) {
+            saveResults(stats, resolve(evaluationsDir, "results.json"));
+        }
     };
 
     switch (command) {

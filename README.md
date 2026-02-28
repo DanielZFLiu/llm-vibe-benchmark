@@ -21,7 +21,7 @@ A TypeScript framework for evaluating LLMs on a "vibe" basis — quality, organi
 npm install
 cp .env.example .env       # add your OPENROUTER_API_KEY
 npm run build
-node dist/index.js run     # generate → evaluate → report
+node dist/index.js run     # generate -> evaluate -> report
 ```
 
 ### CLI Commands
