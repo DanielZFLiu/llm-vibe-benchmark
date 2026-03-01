@@ -312,10 +312,26 @@
 		}
 	}
 
-	.th-model { min-width: 200px; }
+	.th-model {
+		min-width: 200px;
+		position: sticky;
+		left: 0;
+		z-index: 2;
+		background: var(--bg);
+	}
 	.th-avg { text-align: right; }
 
-	.td-model { white-space: nowrap; }
+	.td-model {
+		white-space: nowrap;
+		position: sticky;
+		left: 0;
+		z-index: 1;
+		background: var(--surface);
+	}
+
+	.matrix tbody tr:hover .td-model {
+		background: var(--surface-hover);
+	}
 	.td-avg {
 		font-variant-numeric: tabular-nums;
 		font-weight: 600;

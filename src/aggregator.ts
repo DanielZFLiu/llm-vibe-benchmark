@@ -148,7 +148,10 @@ export function printLeaderboard(stats: ModelStats[]): void {
         ...new Set(stats.flatMap((s) => Object.keys(s.taskScores))),
     ].sort();
 
-    const taskWidths = [30, ...allTasks.map(() => 15)];
+    const taskWidths = [
+        Math.max(30, ...stats.map((s) => s.model.length)),
+        ...allTasks.map((t) => Math.max(15, t.length)),
+    ];
     const taskHeader = ["Model", ...allTasks];
     console.log(
         taskHeader.map((h, i) => pad(h, taskWidths[i]!)).join("  "),

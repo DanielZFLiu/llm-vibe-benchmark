@@ -85,15 +85,17 @@ export async function withRetry<T>(
     fn: () => Promise<T>,
     retries: number = 3,
     delayMs: number = 2000,
+    onWarn?: (message: string) => void,
 ): Promise<T> {
     let lastError: Error | undefined;
+    const warn = onWarn ?? ((msg: string) => console.warn(msg));
     for (let attempt = 1; attempt <= retries; attempt++) {
         try {
             return await fn();
         } catch (err) {
             lastError = err instanceof Error ? err : new Error(String(err));
             if (attempt < retries) {
-                console.warn(
+                warn(
                     `  Attempt ${attempt}/${retries} failed: ${lastError.message}. Retrying in ${delayMs}ms...`,
                 );
                 await sleep(delayMs);

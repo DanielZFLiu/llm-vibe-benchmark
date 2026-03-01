@@ -213,14 +213,19 @@ export async function evaluate(
             );
 
             try {
-                const judgeRaw = await withRetry(async () => {
-                    const result = await chatCompletion(judge, [
-                        { role: "user", content: judgePrompt },
-                    ]);
-                    // Validate parse-ability inside retry loop
-                    parseJudgeResponse(result, judge);
-                    return result;
-                });
+                const judgeRaw = await withRetry(
+                    async () => {
+                        const result = await chatCompletion(judge, [
+                            { role: "user", content: judgePrompt },
+                        ]);
+                        // Validate parse-ability inside retry loop
+                        parseJudgeResponse(result, judge);
+                        return result;
+                    },
+                    3,
+                    2000,
+                    (msg) => progress.log(msg),
+                );
 
                 const parsed = parseJudgeResponse(judgeRaw, judge);
 

@@ -95,8 +95,11 @@ export async function generate(
             messages.push({ role: "user", content: prompt });
 
             try {
-                const response = await withRetry(() =>
-                    chatCompletion(model, messages, effectiveMaxTokens),
+                const response = await withRetry(
+                    () => chatCompletion(model, messages, effectiveMaxTokens),
+                    3,
+                    2000,
+                    (msg) => progress.log(msg),
                 );
 
                 ensureDir(modelDir);
