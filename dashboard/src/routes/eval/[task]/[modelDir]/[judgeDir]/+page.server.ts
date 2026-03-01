@@ -1,8 +1,25 @@
-import { getModelResponse, getSingleEvaluation, getTaskInfo } from '$lib/data.server.js';
+import {
+	getEvaluationsForTask,
+	getModelResponse,
+	getSingleEvaluation,
+	getTaskInfo,
+	getTaskNames
+} from '$lib/data.server.js';
 import { dirToId } from '$lib/utils.js';
 import { error } from '@sveltejs/kit';
 import { marked } from 'marked';
-import type { PageServerLoad } from './$types.js';
+import type { EntryGenerator, PageServerLoad } from './$types.js';
+
+export const entries: EntryGenerator = () => {
+	const tasks = getTaskNames();
+	const result: { task: string; modelDir: string; judgeDir: string }[] = [];
+	for (const task of tasks) {
+		for (const { modelDir, judgeDir } of getEvaluationsForTask(task)) {
+			result.push({ task, modelDir, judgeDir });
+		}
+	}
+	return result;
+};
 
 export const load: PageServerLoad = async ({ params }) => {
 	const { task, modelDir, judgeDir } = params;

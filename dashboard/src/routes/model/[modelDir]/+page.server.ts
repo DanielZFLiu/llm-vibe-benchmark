@@ -1,7 +1,11 @@
 import { getEvaluationsForTask, getLeaderboard, getModelDirs, getTaskNames } from '$lib/data.server.js';
 import { dirToId } from '$lib/utils.js';
 import { error } from '@sveltejs/kit';
-import type { PageServerLoad } from './$types.js';
+import type { EntryGenerator, PageServerLoad } from './$types.js';
+
+export const entries: EntryGenerator = () => {
+	return getModelDirs().map((modelDir) => ({ modelDir }));
+};
 
 export const load: PageServerLoad = async ({ params }) => {
 	const { modelDir } = params;

@@ -1,8 +1,14 @@
-import { getModelResponse, getTaskInfo } from '$lib/data.server.js';
+import { getModelDirs, getModelResponse, getTaskInfo, getTaskNames } from '$lib/data.server.js';
 import { dirToId } from '$lib/utils.js';
 import { error } from '@sveltejs/kit';
 import { marked } from 'marked';
-import type { PageServerLoad } from './$types.js';
+import type { EntryGenerator, PageServerLoad } from './$types.js';
+
+export const entries: EntryGenerator = () => {
+	const models = getModelDirs();
+	const tasks = getTaskNames();
+	return models.flatMap((modelDir) => tasks.map((task) => ({ modelDir, task })));
+};
 
 export const load: PageServerLoad = async ({ params }) => {
 	const { modelDir, task } = params;

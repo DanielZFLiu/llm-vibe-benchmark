@@ -1,12 +1,13 @@
 import { existsSync, readdirSync, readFileSync } from 'fs';
-import { dirname, join, resolve } from 'path';
-import { fileURLToPath } from 'url';
+import { join, resolve } from 'path';
 import type { Criterion, Evaluation, EvaluationFile, ModelResult, TaskInfo } from './types.js';
 import { dirToId, formatTaskName, parseEvalFilename } from './utils.js';
 
-// Navigate from dashboard/src/lib up to repo root
-const __dir = dirname(fileURLToPath(import.meta.url));
-const REPO_ROOT = join(__dir, '..', '..', '..');
+// Navigate from dashboard/ up to repo root.
+// Using process.cwd() instead of import.meta.url so that the path resolves
+// correctly during both `vite dev` and the prerender step of `vite build`
+// (where import.meta.url points into .svelte-kit/output/server/).
+const REPO_ROOT = resolve(process.cwd(), '..');
 
 // Read paths from benchmark.config.json so the dashboard stays in sync with
 // any customised config rather than assuming default directory names.
