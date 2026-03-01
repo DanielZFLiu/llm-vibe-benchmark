@@ -1,19 +1,18 @@
-# LLM Vibe Benchmark
+# ◈ LLM Vibe Benchmark
 
-A TypeScript framework for evaluating LLMs on a "vibe" basis — quality, organization, best practices, and more — across any type of task.
+A typescript framework for evaluating LLMs on a vibe basis - quality, organization, best practices, and anything you so desire - across any type of task.
 
 ## How It Works
 
 - **Set C (Competitors):** Models being benchmarked.
-- **Set J (Judges):** Frontier models that score the responses. Separated from competitors to avoid bias.
+- **Set J (Judges):** Frontier models that score the responses.
 - All API calls go through [OpenRouter](https://openrouter.ai) for unified model access.
 
 ### Pipeline
 
 1. **Generate** — Each Set C model responds to every task in `tasks/`.
-2. **Anonymize** — Model self-identifiers are stripped before judging.
-3. **Evaluate** — Each Set J judge scores each response (0–100) per criterion with chain-of-thought reasoning.
-4. **Report** — Scores are averaged across judges and criteria, printed as a leaderboard, and saved to `evaluations/results.json`.
+2. **Evaluate** — Each Set J judge scores each response (0–100) per criterion.
+3. **Report** — Scores are averaged across judges and criteria, printed, and saved.
 
 ## Quick Start
 
@@ -61,7 +60,7 @@ node dist/index.js run --tasks relay_webhook_api --models step-3.5
 
 ## Dashboard
 
-A SvelteKit dashboard for browsing results interactively — leaderboard, per-task scores, model responses, and judge reasoning, all rendered as markdown.
+A sveltekit dashboard for browsing results interactively.
 
 ```bash
 cd dashboard
@@ -97,11 +96,11 @@ Edit `benchmark.config.json`:
 
 ## Output Files
 
-After running, two types of output are saved:
+After running, these types of output are saved:
 
 - **`responses/<model>/<task>.md`** — Raw response from each competitor model.
 - **`evaluations/<task>/<model>__<judge>.json`** — Per-judge score file with reasoning and per-criterion scores.
-- **`evaluations/results.json`** — Aggregated leaderboard. Re-running `report` **merges** new results in rather than overwriting — models not present in the latest run are preserved from prior runs. Newest data wins on conflict.
+- **`evaluations/results.json`** — Aggregated leaderboard. Re-running `report` **merges** new results in. Newest data wins on conflict.
 
 ## Adding Tasks
 
@@ -128,7 +127,7 @@ Add a `task.json` to any task folder to override global settings for that task:
 
 | Field | Description |
 |---|---|
-| `maxTokens` | Overrides the global `maxTokens` for generation calls on this task. Multi-file programming tasks typically need `32768`+. |
+| `maxTokens` | Overrides the global `maxTokens` for generation calls on this task. |
 | `systemPrompt` | Injected as a `system` role message before the task prompt in all competitor generation calls. Use this to enforce consistent output formatting (e.g. file headers for multi-file implementations). When set, judges are also automatically notified that the response is a structured multi-file implementation. |
 
 ### Default Criteria
