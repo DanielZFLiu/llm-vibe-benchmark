@@ -1,12 +1,17 @@
 import {
 	getEvaluationsForTask,
 	getLeaderboard,
-	getTaskInfo
+	getTaskInfo,
+	getTaskNames
 } from '$lib/data.server.js';
 import { dirToId, formatTaskName } from '$lib/utils.js';
 import { error } from '@sveltejs/kit';
 import { marked } from 'marked';
-import type { PageServerLoad } from './$types.js';
+import type { EntryGenerator, PageServerLoad } from './$types.js';
+
+export const entries: EntryGenerator = () => {
+	return getTaskNames().map((task) => ({ task }));
+};
 
 export const load: PageServerLoad = async ({ params }) => {
 	const { task } = params;
