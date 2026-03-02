@@ -1,0 +1,15 @@
+{
+  "judge": "google/gemini-3.1-pro-preview",
+  "modelA": "deepseek/deepseek-v3.2",
+  "modelB": "minimax/minimax-m2.5",
+  "winner": "A",
+  "criterionWinners": {
+    "encryption_soundness": "tie",
+    "architecture_fitness": "A",
+    "invite_system_design": "A",
+    "security_model": "tie",
+    "self_hosting_practicality": "A",
+    "design_depth_and_precision": "A"
+  },
+  "reasoning": "Response A perfectly anchors its design in the specific constraints of the prompt, particularly the 1,000-user limit, right-sizing, and self-hosting practicality. By choosing a PWA, it sidesteps the massive logistical hurdle of distributing self-hosted iOS/Android apps outside of App Stores. Its choice of Go + SQLite without external caching limits the operational burden to a single container and a single file to back up, which is ideal for a community-run server. Response B, while solid in a traditional enterprise context, introduces unnecessary complexity (React Native, PostgreSQL, Redis) for a 1,000-user deployment. Additionally, Response A specifically addresses the prompt's tricky constraint of validating an invite without the server learning the invitee's identity before they join, using an clever ephemeral key exchange. Both responses provide excellent, cryptographically sound E2EE designs based on the Signal Protocol, but Response A goes further by fully addressing trade-offs explicitly, encrypting user profiles, and designing an encrypted server-side blob backup for key recovery."
+}

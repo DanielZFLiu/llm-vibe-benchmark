@@ -4,6 +4,9 @@
 	import type { PageData } from './$types.js';
 
 	let { data }: { data: PageData } = $props();
+
+	const hasElo = $derived(data.eloRankings && data.eloRankings.length > 0);
+	let mode: 'score' | 'elo' = $state('score');
 </script>
 
 <svelte:head>
@@ -41,53 +44,91 @@
 	</div>
 </section>
 
-<!-- ── Model Rankings for this Task ──────────────────────────── -->
-<section class="models-section">
-	<h2 class="section-label">Model Rankings</h2>
-	<div class="model-list">
-		{#each data.models as model, i (model.modelDir)}
-			<div class="model-block">
-				<div class="model-block-header">
-					<div class="model-block-left">
-						<span class="task-rank">#{i + 1}</span>
-						<a href="/model/{model.modelDir}" class="model-name">{model.modelId}</a>
-						{#if data.ranks[model.modelDir]}
-							<span class="overall-rank" title="Overall rank">#{data.ranks[model.modelDir]} overall</span>
-						{/if}
-					</div>
-					<span class="model-avg">{fmt(model.avgScore)}</span>
-				</div>
+<!-- ── Mode Toggle ────────────────────────────────────────────── -->
+{#if hasElo}
+	<div class="mode-toggle-wrap">
+		<div class="mode-toggle">
+			<button class="mode-btn" class:active={mode === 'score'} onclick={() => (mode = 'score')}>Score</button>
+			<button class="mode-btn" class:active={mode === 'elo'} onclick={() => (mode = 'elo')}>ELO</button>
+		</div>
+	</div>
+{/if}
 
-				<!-- Per-criterion bars averaged across judges -->
-				{#if data.taskInfo.criteria.length > 0}
-					<div class="criteria-bars">
-						{#each data.taskInfo.criteria as criterion}
-							{@const scores = model.judgeEvals.map((e) => e.scores[criterion.name] ?? 0).filter((s) => s > 0)}
-							{@const avg = scores.length > 0 ? scores.reduce((a, b) => a + b, 0) / scores.length : null}
-							<div class="cbar-row">
-								<span class="cbar-name">{formatCriterionName(criterion.name)}</span>
-								<div class="cbar-track">
-									<div class="cbar-fill" style="width: {avg != null ? pct(avg) : 0}%"></div>
+<!-- ── Model Rankings for this Task ──────────────────────────── -->
+{#if mode === 'score'}
+	<section class="models-section">
+		<h2 class="section-label">Model Rankings</h2>
+		<div class="model-list">
+			{#each data.models as model, i (model.modelDir)}
+				<div class="model-block">
+					<div class="model-block-header">
+						<div class="model-block-left">
+							<span class="task-rank">#{i + 1}</span>
+							<a href="/model/{model.modelDir}" class="model-name">{model.modelId}</a>
+							{#if data.ranks[model.modelDir]}
+								<span class="overall-rank" title="Overall rank">#{data.ranks[model.modelDir]} overall</span>
+							{/if}
+						</div>
+						<span class="model-avg">{fmt(model.avgScore)}</span>
+					</div>
+
+					<!-- Per-criterion bars averaged across judges -->
+					{#if data.taskInfo.criteria.length > 0}
+						<div class="criteria-bars">
+							{#each data.taskInfo.criteria as criterion}
+								{@const scores = model.judgeEvals.map((e) => e.scores[criterion.name] ?? 0).filter((s) => s > 0)}
+								{@const avg = scores.length > 0 ? scores.reduce((a, b) => a + b, 0) / scores.length : null}
+								<div class="cbar-row">
+									<span class="cbar-name">{formatCriterionName(criterion.name)}</span>
+									<div class="cbar-track">
+										<div class="cbar-fill" style="width: {avg != null ? pct(avg) : 0}%"></div>
+									</div>
+									<span class="cbar-val">{avg != null ? fmt(avg) : '—'}</span>
 								</div>
-								<span class="cbar-val">{avg != null ? fmt(avg) : '—'}</span>
-							</div>
+							{/each}
+						</div>
+					{/if}
+
+					<!-- Per-judge scores -->
+					<div class="judge-row">
+						{#each model.judgeEvals as je}
+							<a href="/eval/{data.task}/{model.modelDir}/{je.judgeDir}" class="judge-chip">
+								<span class="judge-chip-name">{je.judgeId}</span>
+								<span class="judge-chip-score">{fmt(je.avgScore)}</span>
+							</a>
 						{/each}
 					</div>
-				{/if}
-
-				<!-- Per-judge scores -->
-				<div class="judge-row">
-					{#each model.judgeEvals as je}
-						<a href="/eval/{data.task}/{model.modelDir}/{je.judgeDir}" class="judge-chip">
-							<span class="judge-chip-name">{je.judgeId}</span>
-							<span class="judge-chip-score">{fmt(je.avgScore)}</span>
-						</a>
-					{/each}
 				</div>
-			</div>
-		{/each}
-	</div>
-</section>
+			{/each}
+		</div>
+	</section>
+{:else if data.eloRankings}
+	<section class="models-section">
+		<h2 class="section-label">ELO Rankings</h2>
+		<div class="model-list">
+			{#each data.eloRankings as entry, i (entry.model)}
+				<div class="model-block">
+					<div class="model-block-header">
+						<div class="model-block-left">
+							<span class="task-rank">#{i + 1}</span>
+							<a href="/model/{entry.model}" class="model-name">{entry.modelId}</a>
+						</div>
+						<div class="elo-stats">
+							<span class="model-avg">{entry.elo}</span>
+							<span class="elo-record">{entry.wins}W {entry.losses}L {entry.ties}T</span>
+						</div>
+					</div>
+
+					<div class="elo-bar-wrap">
+						<div class="cbar-track">
+							<div class="cbar-fill" style="width: {pct(entry.scaled)}%"></div>
+						</div>
+					</div>
+				</div>
+			{/each}
+		</div>
+	</section>
+{/if}
 
 <style lang="scss">
 	// ── Header ───────────────────────────────────────────────────
@@ -318,5 +359,65 @@
 		font-weight: 700;
 		font-variant-numeric: tabular-nums;
 		color: var(--accent);
+	}
+
+	// ── Mode Toggle ──────────────────────────────────────────────
+	.mode-toggle-wrap {
+		display: flex;
+		align-items: center;
+		gap: 1rem;
+		margin-bottom: 2rem;
+	}
+
+	.mode-toggle {
+		display: flex;
+		background: var(--surface);
+		border: 1px solid var(--border);
+		border-radius: var(--radius);
+		overflow: hidden;
+	}
+
+	.mode-btn {
+		padding: 0.4rem 1rem;
+		border: none;
+		background: transparent;
+		font-size: 0.8rem;
+		font-weight: 600;
+		color: var(--text-muted);
+		cursor: pointer;
+		transition: background 0.12s, color 0.12s;
+		font-family: var(--font);
+
+		&:not(:last-child) {
+			border-right: 1px solid var(--border);
+		}
+
+		&:hover {
+			background: var(--surface-hover);
+			color: var(--text);
+		}
+
+		&.active {
+			background: var(--accent-faint);
+			color: var(--accent);
+		}
+	}
+
+	// ── ELO Stats ────────────────────────────────────────────────
+	.elo-stats {
+		display: flex;
+		flex-direction: column;
+		align-items: flex-end;
+		gap: 0.1rem;
+	}
+
+	.elo-record {
+		font-size: 0.72rem;
+		color: var(--text-faint);
+		font-variant-numeric: tabular-nums;
+	}
+
+	.elo-bar-wrap {
+		margin-top: 0.5rem;
 	}
 </style>

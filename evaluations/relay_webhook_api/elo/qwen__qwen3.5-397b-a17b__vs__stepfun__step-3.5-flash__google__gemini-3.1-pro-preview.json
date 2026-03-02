@@ -1,0 +1,15 @@
+{
+  "judge": "google/gemini-3.1-pro-preview",
+  "modelA": "qwen/qwen3.5-397b-a17b",
+  "modelB": "stepfun/step-3.5-flash",
+  "winner": "A",
+  "criterionWinners": {
+    "correctness_and_completeness": "A",
+    "dotnet10_idioms": "B",
+    "background_service_and_channels": "A",
+    "resilience_and_retry": "A",
+    "data_model_and_ef_core": "B",
+    "code_quality_and_structure": "B"
+  },
+  "reasoning": "Response A demonstrates excellent adherence to .NET 10 idioms, using perfectly matching package versioning and 'TypedResults' throughout. However, it critically fails on three major functional constraints: 1) It writes a manual 'for' loop for retry logic with 'Task.Delay', completely ignoring the negative constraint 'not manual retry loops'. 2) It executes fan-out to subscribers synchronously inside a 'foreach' loop blocking the entire background channel until all deliveries for an event are sequentially exhausted. 3) It abruptly cancels the background worker's cancellation token on 'StopAsync', resulting in abandoned in-flight tasks rather than gracefully draining them. Additionally, Response A alters the raw JSON payload when computing the HMAC signature, which can trigger signature mismatches. Response B properly utilizes the requested resilience extension hooks to construct an exponential backoff pipeline without manual loops. Moreover, Response B genuinely fans out the work by queuing individual webhook deliveries into the channel and dispatching them optimally via 'Task.Run', while precisely tracking active tasks to enforce graceful shutdown when 'StopAsync' is triggered. It also strictly captures the raw request body to ensure exact HMAC computations."
+}

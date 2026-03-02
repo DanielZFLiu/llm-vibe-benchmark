@@ -1,0 +1,15 @@
+{
+  "judge": "openai/gpt-5.3-codex",
+  "modelA": "minimax/minimax-m2.5",
+  "modelB": "stepfun/step-3.5-flash",
+  "winner": "A",
+  "criterionWinners": {
+    "correctness_and_completeness": "A",
+    "dotnet10_idioms": "B",
+    "background_service_and_channels": "B",
+    "resilience_and_retry": "A",
+    "data_model_and_ef_core": "A",
+    "code_quality_and_structure": "A"
+  },
+  "reasoning": "Both responses attempt the required multi-file structure, but each has significant issues. Response A is stronger overall despite notable flaws.\n\nResponse A positives: it models entities/relationships well, uses minimal APIs for all required endpoints, includes OpenAPI metadata on each endpoint (name/summary/tags), applies API-layer validation (URL/event type/payload size), and uses structured logging in delivery paths. It also at least attempts to use Microsoft.Extensions.Http.Resilience instead of a manual retry loop.\n\nResponse A major problems: DeliveryWorker is registered as singleton, not as a hosted service, so background processing likely never starts; graceful shutdown drain just discards queued work; retry config/attempt accounting appears incorrect and may retry 4xx and exceed intended total-attempt semantics; channel/attempt handling can create duplicate attempt issues.\n\nResponse B positives: better channel + hosted background worker wiring conceptually, rate limiting is scoped to POST /events, and it uses TypedResults more consistently.\n\nResponse B major problems are more severe: it uses a manual retry loop (explicitly disallowed), not Microsoft.Extensions.Http.Resilience; DeliveryService depends on an undefined/nonstandard IHttpClient; Program uses an undefined _logger in endpoint code; signature is attached to content headers and payload body shape differs from requirement (wraps type+payload instead of sending payload body directly). These issues materially hurt correctness and likely compile/run viability.\n\nGiven the rubric, A is imperfect but closer to the requested architecture and constraints than B, especially on resilience requirement compliance and overall structure."
+}

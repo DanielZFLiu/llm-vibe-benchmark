@@ -57,6 +57,7 @@ export interface RunOptions {
     tasks?: string[];
     models?: string[];
     force?: boolean;
+    elo?: boolean;
 }
 
 // --- Aggregator Types ---
@@ -78,6 +79,44 @@ export const TaskSettingsSchema = z.object({
 });
 
 export type TaskSettings = z.infer<typeof TaskSettingsSchema>;
+
+// --- ELO Pairwise Comparison Schemas ---
+
+export const EloComparisonSchema = z.object({
+    judge: z.string(),
+    modelA: z.string(),
+    modelB: z.string(),
+    winner: z.enum(["A", "B", "tie"]),
+    criterionWinners: z.record(z.string(), z.enum(["A", "B", "tie"])),
+    reasoning: z.string(),
+});
+
+export type EloComparison = z.infer<typeof EloComparisonSchema>;
+
+// --- ELO Aggregated Results ---
+
+export interface EloModelStats {
+    model: string;
+    elo: number;
+    scaled: number;
+    wins: number;
+    losses: number;
+    ties: number;
+    taskElos: Record<string, number>;
+}
+
+export interface EloMatchup {
+    modelA: string;
+    modelB: string;
+    winsA: number;
+    winsB: number;
+    ties: number;
+}
+
+export interface EloResults {
+    models: EloModelStats[];
+    matchups: EloMatchup[];
+}
 
 // --- Default Criteria ---
 

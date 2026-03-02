@@ -1,0 +1,15 @@
+{
+  "judge": "openai/gpt-5.3-codex",
+  "modelA": "deepseek/deepseek-v3.2",
+  "modelB": "minimax/minimax-m2.5",
+  "winner": "A",
+  "criterionWinners": {
+    "correctness_and_completeness": "A",
+    "dotnet10_idioms": "A",
+    "background_service_and_channels": "A",
+    "resilience_and_retry": "A",
+    "data_model_and_ef_core": "A",
+    "code_quality_and_structure": "A"
+  },
+  "reasoning": "Response A is stronger overall, despite notable flaws. Both responses attempt full multi-file implementations with Minimal APIs, EF Core, Channels, and a BackgroundService, but B has more critical correctness issues.\n\nA’s strengths: all required endpoints are present with WithName/WithSummary/WithTags, OpenAPI setup is correct, channel-based worker is actually registered as a hosted service, logging is more comprehensive/structured, and validation rules are mostly covered (URL/event type/64KB payload). It also includes migrations and EF relationships/indexes.\n\nA’s weaknesses: there are likely compile/runtime issues (missing Relay.Models using in Program.cs, Event.Payload type mismatch assigning object to JsonDocument, injecting DeliveryWorker directly when only AddHostedService is registered), rate limiting is not per-IP as required, retry/dead-letter semantics are not fully correct (status often set failed too early and attempt tracking does not reflect each retry), and SQLite column type jsonb is questionable.\n\nB’s weaknesses are more severe: DeliveryWorker is registered as singleton but not as hosted service, so background processing would not run; graceful shutdown drain discards queued work; delivery worker logic can create duplicate DeliveryAttempt records against a unique index; retry/attempt accounting is incorrect; global limiter setup appears incorrectly typed for PartitionedRateLimiter and not scoped specifically to POST /events; resilience usage is custom and likely API-incompatible in places. While B has cleaner model naming consistency internally and reasonable endpoint coverage, the event-delivery critical path is less reliable.\n\nGiven the rubric priority on runnable fan-out behavior and background delivery correctness, A is the better response."
+}

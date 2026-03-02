@@ -1,0 +1,15 @@
+{
+  "judge": "openai/gpt-5.3-codex",
+  "modelA": "stepfun/step-3.5-flash",
+  "modelB": "z-ai/glm-5",
+  "winner": "B",
+  "criterionWinners": {
+    "correctness_and_completeness": "B",
+    "dotnet10_idioms": "A",
+    "background_service_and_channels": "B",
+    "resilience_and_retry": "B",
+    "data_model_and_ef_core": "B",
+    "code_quality_and_structure": "B"
+  },
+  "reasoning": "Response B is clearly stronger overall. Response A has multiple critical issues that undermine correctness/compilability and requirement compliance: it injects a non-existent `IHttpClient` type, references `_logger` in `Program.cs` without defining/injecting it, uses manual retry loops (explicitly disallowed), and does not truly use `Microsoft.Extensions.Http.Resilience` for delivery retries. A also posts `{ type, payload }` to subscribers instead of the raw payload body required, and computes signature over that wrapped JSON. By contrast, B has the full endpoint set, proper channel-based async fan-out, EF entities/relationships, and resilience handler integration. B is not perfect: rate limiting is not per-IP, retry predicate retries all non-success responses (including 4xx), it uses `Results` instead of `TypedResults`, and payload-size check uses string length rather than byte count. Still, B satisfies substantially more of the spec end-to-end and is much closer to runnable production behavior."
+}

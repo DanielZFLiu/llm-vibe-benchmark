@@ -5,6 +5,12 @@ import { loadConfig } from "./config.js";
 import { generate } from "./generator.js";
 import { evaluate } from "./evaluator.js";
 import { aggregate, printLeaderboard, saveResults } from "./aggregator.js";
+import { eloEvaluate } from "./elo-evaluator.js";
+import {
+    eloAggregate,
+    printEloLeaderboard,
+    saveEloResults,
+} from "./elo-aggregator.js";
 
 function parseOptions(args: string[]): RunOptions {
     const tasksIdx = args.indexOf("--tasks");
@@ -18,7 +24,8 @@ function parseOptions(args: string[]): RunOptions {
             ? args[modelsIdx + 1]?.split(",").map((s) => s.trim()).filter(Boolean)
             : undefined;
     const force = args.includes("--force");
-    return { tasks, models, force };
+    const elo = args.includes("--elo");
+    return { tasks, models, force, elo };
 }
 
 async function main(): Promise<void> {
@@ -39,6 +46,7 @@ Options:
   --tasks <t1,t2,...>    Only run the specified task names (comma-separated)
   --models <m1,m2,...>   Only run the specified Set C models (comma-separated, partial match)
   --force                Overwrite existing outputs instead of skipping them
+  --elo                  Use ELO pairwise comparison mode instead of absolute scoring
 `);
         return;
     }
@@ -55,23 +63,48 @@ Options:
         }
     };
 
+    const eloReport = () => {
+        const evaluationsDir = resolve(rootDir, config.evaluationsDir);
+        const results = eloAggregate(evaluationsDir);
+        printEloLeaderboard(results);
+        if (results.models.length > 0) {
+            saveEloResults(
+                results,
+                resolve(evaluationsDir, "elo-results.json"),
+            );
+        }
+    };
+
     switch (command) {
         case "generate":
             await generate(config, rootDir, options);
             break;
 
         case "evaluate":
-            await evaluate(config, rootDir, options);
+            if (options.elo) {
+                await eloEvaluate(config, rootDir, options);
+            } else {
+                await evaluate(config, rootDir, options);
+            }
             break;
 
         case "report":
-            report();
+            if (options.elo) {
+                eloReport();
+            } else {
+                report();
+            }
             break;
 
         case "run":
             await generate(config, rootDir, options);
-            await evaluate(config, rootDir, options);
-            report();
+            if (options.elo) {
+                await eloEvaluate(config, rootDir, options);
+                eloReport();
+            } else {
+                await evaluate(config, rootDir, options);
+                report();
+            }
             break;
 
         default:

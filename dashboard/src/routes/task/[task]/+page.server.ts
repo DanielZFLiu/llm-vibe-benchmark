@@ -2,7 +2,8 @@ import {
 	getEvaluationsForTask,
 	getLeaderboard,
 	getTaskInfo,
-	getTaskNames
+	getTaskNames,
+	getTaskEloRankings
 } from '$lib/data.server.js';
 import { dirToId, formatTaskName } from '$lib/utils.js';
 import { error } from '@sveltejs/kit';
@@ -74,12 +75,16 @@ export const load: PageServerLoad = async ({ params }) => {
 
 	const promptHtml = taskInfo.prompt ? await marked(taskInfo.prompt, { async: true }) : '';
 
+	// ELO data for this task
+	const eloRankings = getTaskEloRankings(task);
+
 	return {
 		task,
 		displayName: formatTaskName(task),
 		taskInfo,
 		promptHtml,
 		models,
-		ranks
+		ranks,
+		eloRankings
 	};
 };

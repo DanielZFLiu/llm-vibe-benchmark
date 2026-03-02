@@ -1,0 +1,15 @@
+{
+  "judge": "openai/gpt-5.3-codex",
+  "modelA": "deepseek/deepseek-v3.2",
+  "modelB": "moonshotai/kimi-k2.5",
+  "winner": "B",
+  "criterionWinners": {
+    "correctness_and_completeness": "B",
+    "dotnet10_idioms": "B",
+    "background_service_and_channels": "B",
+    "resilience_and_retry": "B",
+    "data_model_and_ef_core": "B",
+    "code_quality_and_structure": "B"
+  },
+  "reasoning": "Response A is stronger overall because its core publish -> persist -> fan-out -> background delivery flow is actually wired correctly and likely runnable, while Response B has multiple critical issues that undermine correctness. In B, `POST /events` depends on `DeliveryWorker` being directly injected, but `AddHostedService<DeliveryWorker>()` does not reliably register it for endpoint injection as `DeliveryWorker`; that can break event publishing at runtime. B also appears to misconfigure resilience: it mixes `AddStandardResilienceHandler` with questionable option members and direct Polly enum usage, then sends with `CreateClient(nameof(DeliveryService))`, which may not use the configured pipeline, so retry behavior is unreliable. B’s delivery status handling also marks failures too aggressively and does not robustly track retry attempts per actual HTTP try.\n\nA is not perfect: package versions are 9.x despite `net10.0`, rate limiting is not truly per-IP partitioned, 429 rejection does not return ProblemDetails, and graceful draining is incomplete because the worker loop is tied to the stopping token. Still, A has all required endpoints, proper minimal API shape, channel-based async handoff, HMAC signature header, EF entities/context, and a coherent background worker + delivery service architecture. Its implementation is materially closer to the requested behavior and much more likely to compile and run end-to-end.\n\nSo A wins most criteria decisively."
+}

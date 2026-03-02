@@ -42,3 +42,29 @@ export interface ModelTaskEval {
 	evaluations: Evaluation[];
 	avgScore: number;
 }
+
+// --- ELO Types ---
+
+export interface EloModelResult {
+	model: string; // modelDir
+	modelId: string; // full OpenRouter ID
+	elo: number;
+	scaled: number;
+	wins: number;
+	losses: number;
+	ties: number;
+	taskElos: Record<string, number>;
+}
+
+export interface EloMatchup {
+	modelA: string;
+	modelB: string;
+	winsA: number;
+	winsB: number;
+	ties: number;
+}
+
+export interface EloResults {
+	models: EloModelResult[];
+	matchups: EloMatchup[];
+}

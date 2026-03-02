@@ -1,0 +1,15 @@
+{
+  "judge": "openai/gpt-5.3-codex",
+  "modelA": "qwen/qwen3.5-397b-a17b",
+  "modelB": "z-ai/glm-5",
+  "winner": "B",
+  "criterionWinners": {
+    "correctness_and_completeness": "B",
+    "dotnet10_idioms": "B",
+    "background_service_and_channels": "B",
+    "resilience_and_retry": "B",
+    "data_model_and_ef_core": "B",
+    "code_quality_and_structure": "B"
+  },
+  "reasoning": "Response B is clearly stronger overall. Response A has multiple critical issues that likely prevent correct runtime behavior and possibly compilation: it registers DeliveryWorker only as a hosted service but injects it directly into the /events endpoint (service resolution problem), uses RequireRateLimiting(\"fixed\") without defining that named policy, and has invalid async usage inside lock blocks in StopAsync (await inside lock), which is not valid C#. It also stores the entire event envelope JSON as Event.Payload and sends that to subscribers, rather than just the event payload body required by spec. Package versions are also inconsistent with .NET 10 requirements (EF Core 9, RateLimiting 8, preview OpenAPI package). \n\nResponse B is not perfect, but it is much closer to a runnable, coherent solution: all endpoints are present with Minimal APIs, channel + BackgroundService fan-out is wired correctly via DI, HMAC header is implemented correctly, retries are configured via Microsoft.Extensions.Http.Resilience, and delivery status persistence is handled. It still has gaps (rate limiting is not per-IP, retry ShouldHandle includes all non-success including 4xx, and no migrations are provided), but these are smaller than A’s structural and correctness failures.\n\nTherefore, B wins on every criterion."
+}

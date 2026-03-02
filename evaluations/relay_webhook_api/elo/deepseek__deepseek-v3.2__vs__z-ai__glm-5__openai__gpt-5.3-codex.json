@@ -1,0 +1,15 @@
+{
+  "judge": "openai/gpt-5.3-codex",
+  "modelA": "deepseek/deepseek-v3.2",
+  "modelB": "z-ai/glm-5",
+  "winner": "B",
+  "criterionWinners": {
+    "correctness_and_completeness": "B",
+    "dotnet10_idioms": "A",
+    "background_service_and_channels": "B",
+    "resilience_and_retry": "B",
+    "data_model_and_ef_core": "B",
+    "code_quality_and_structure": "B"
+  },
+  "reasoning": "Response B is stronger overall because it is much more likely to compile and run end-to-end, while Response A has several critical implementation issues that break the core path. In A, Program.cs uses model types without importing their namespace, assigns `object` payloads to an `Event.Payload` typed as `JsonDocument` (type mismatch), and injects `DeliveryWorker` directly into endpoints even though it is only registered as a hosted service, which typically won’t resolve as an endpoint dependency. A also has questionable resilience configuration (`AddStandardResilienceHandler` options usage appears incorrect for the package/API shape) and delivery attempt accounting/status transitions that can leave items pending after exceptions. B wires Channel + BackgroundService correctly through DI, persists events/delivery attempts, and queues fan-out reliably.\n\nOn .NET idioms, both use Minimal APIs and built-in OpenAPI/rate limiting, but A is slightly closer to the explicit OpenAPI endpoint metadata requirement (includes `.WithOpenApi()` and uses `Results.Problem` consistently). B still uses built-in OpenAPI and metadata, but error responses are manually built with `Results.BadRequest/NotFound` and neither response uses `TypedResults` everywhere.\n\nFor background processing, B clearly implements channel handoff as a shared DI channel and has a drain strategy in `StopAsync`. A’s internal channel pattern is acceptable in theory, but its endpoint-to-worker wiring is fragile due to DI registration mismatch.\n\nFor resilience/retry, B at least uses `Microsoft.Extensions.Http.Resilience` with exponential retry shape and total 5 attempts (initial + 4 retries), while A’s resilience config is less credible and attempt tracking is weaker. B does incorrectly retry all non-success status codes (including 4xx), so it is not perfect, but still better than A.\n\nFor EF/data modeling, both define required entities and indexes; A includes migrations, B uses `EnsureCreatedAsync`. However, A’s model/payload typing problems undermine runtime correctness, so B is more reliable.\n\nCode structure in B is cleaner and better separated into DTOs/services/interfaces; A is more monolithic in Program.cs despite decent logging and validation coverage."
+}

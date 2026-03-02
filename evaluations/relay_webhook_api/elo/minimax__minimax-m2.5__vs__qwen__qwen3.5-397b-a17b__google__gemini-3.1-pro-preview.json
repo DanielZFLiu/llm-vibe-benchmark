@@ -1,0 +1,15 @@
+{
+  "judge": "google/gemini-3.1-pro-preview",
+  "modelA": "minimax/minimax-m2.5",
+  "modelB": "qwen/qwen3.5-397b-a17b",
+  "winner": "B",
+  "criterionWinners": {
+    "correctness_and_completeness": "B",
+    "dotnet10_idioms": "A",
+    "background_service_and_channels": "B",
+    "resilience_and_retry": "B",
+    "data_model_and_ef_core": "A",
+    "code_quality_and_structure": "B"
+  },
+  "reasoning": "Response A followed the strict versioning instructions (using .NET 10 packages for EF Core) and properly applied .NET 10 OpenAPI metadata endpoints. However, its actual system implementation is critically flawed. First, it introduces a severe race condition in the POST /events endpoint by enqueuing the job to the channel before calling 'SaveChangesAsync()'. The worker thread attempts to retrieve the uncommitted delivery, fails, creates a duplicate, and triggers a Unique Constraint violation. Second, the background worker processes events sequentially, blocking entirely while waiting for external webhook responses (eliminating true fan-out concurrency). Third, its retry logic reuses a single 'HttpRequestMessage' inside the resilience pipeline, which will immediately throw an 'InvalidOperationException' on the first retry because HTTP requests cannot be sent multiple times. Finally, its 'graceful drain' discards the channel items rather than processing them.\n\nResponse B missed the EF 10 requirement (using version 9.0 packages) and has a bug where it sets a global rate limiter but then requires a non-existent \"fixed\" limiter on the endpoint, which will throw at runtime. However, its domain engineering is vastly superior. It correctly spawns concurrent tasks for asynchronous fan-out, properly drains and awaits in-flight tasks on shutdown, re-creates the 'HttpRequestMessage' inside the execution pipeline to ensure functional retries, and securely protects against 64KB over-allocations by streaming the body before deserializing. Overall, Response B wrote a working, scalable asynchronous webhook worker, whereas A's code is structurally crippled."
+}

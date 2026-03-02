@@ -1,6 +1,6 @@
 import { existsSync, readdirSync, readFileSync } from 'fs';
 import { join, resolve } from 'path';
-import type { Criterion, Evaluation, EvaluationFile, ModelResult, TaskInfo } from './types.js';
+import type { Criterion, Evaluation, EvaluationFile, ModelResult, TaskInfo, EloModelResult, EloMatchup, EloResults } from './types.js';
 import { dirToId, formatTaskName, parseEvalFilename } from './utils.js';
 
 // Navigate from dashboard/ up to repo root.
@@ -219,4 +219,70 @@ export function getJudgeDirs(): string[] {
 		}
 	}
 	return Array.from(judges).sort();
+}
+
+// ── ELO data ─────────────────────────────────────────────────────
+
+interface RawEloResult {
+	model: string;
+	elo: number;
+	scaled: number;
+	wins: number;
+	losses: number;
+	ties: number;
+	taskElos: Record<string, number>;
+}
+
+interface RawEloResults {
+	models: RawEloResult[];
+	matchups: EloMatchup[];
+}
+
+/** Get ELO-based rankings for a specific task from elo-results.json */
+export function getTaskEloRankings(task: string): EloModelResult[] {
+	const results = getEloResults();
+	if (!results) return [];
+
+	// Build per-task rankings from taskElos
+	const taskModels = results.models
+		.filter((m) => m.taskElos[task] != null)
+		.map((m) => ({
+			...m,
+			elo: m.taskElos[task]!
+		}))
+		.sort((a, b) => b.elo - a.elo);
+
+	// Re-scale per-task ELOs to 0-100
+	if (taskModels.length === 0) return [];
+	const elos = taskModels.map((m) => m.elo);
+	const min = Math.min(...elos);
+	const max = Math.max(...elos);
+	const range = max - min;
+
+	return taskModels.map((m) => ({
+		...m,
+		scaled: range > 0 ? Math.round(((m.elo - min) / range) * 1000) / 10 : 50
+	}));
+}
+
+export function getEloResults(): EloResults | null {
+	const resultsPath = join(EVALUATIONS_DIR, 'elo-results.json');
+	if (!existsSync(resultsPath)) return null;
+
+	try {
+		const raw: RawEloResults = JSON.parse(readFileSync(resultsPath, 'utf-8'));
+		if (!raw.models || raw.models.length === 0) return null;
+
+		const models: EloModelResult[] = raw.models.map((r) => ({
+			...r,
+			modelId: dirToId(r.model)
+		}));
+
+		return {
+			models,
+			matchups: raw.matchups ?? []
+		};
+	} catch {
+		return null;
+	}
 }

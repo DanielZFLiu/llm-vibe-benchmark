@@ -1,0 +1,15 @@
+{
+  "judge": "openai/gpt-5.3-codex",
+  "modelA": "minimax/minimax-m2.5",
+  "modelB": "z-ai/glm-5",
+  "winner": "A",
+  "criterionWinners": {
+    "encryption_soundness": "A",
+    "architecture_fitness": "A",
+    "invite_system_design": "B",
+    "security_model": "A",
+    "self_hosting_practicality": "A",
+    "design_depth_and_precision": "A"
+  },
+  "reasoning": "Response A is stronger overall. Both responses choose a sensible fat-client/dumb-server architecture, Signal-style cryptography, WebSockets, PostgreSQL, and Docker-based self-hosting. However, A is generally more complete, more operationally actionable, and more precise across the required sections.\n\nOn encryption, A is slightly more cryptographically coherent: it explicitly uses Curve25519/X3DH/Double Ratchet with sender keys and discusses forward secrecy, compromise impact, and key restore patterns. B is solid but has a notable ambiguity/error by framing identity keys as Ed25519 in an X3DH flow without clearly separating DH keys (X25519) vs signing keys, which weakens precision.\n\nOn architecture fit, A is better right-sized for a single VPS deployment and provides clearer component responsibilities. B introduces load balancer + TLS terminator split in the base diagram, which feels a bit overbuilt for the stated constraints (even if still plausible).\n\nOn invite design, both are good. B has a slight edge by explicitly storing token hashes (better hygiene), while still covering quotas, redemption, revocation, and tree linkage. A is good too, but has minor ambiguity around chain handling after member removal.\n\nOn security model, A is more explicit and realistic about metadata leakage, malicious server capabilities, DB exfiltration, and device compromise blast radius. B has a few overclaims (e.g., server not knowing conversation partners for typing) that are not fully consistent with required routing metadata.\n\nOn self-hosting practicality, A provides a more complete ops story: concrete compose stack, external dependencies, backup strategy, and monitoring signals. B is deployable but thinner on monitoring/health operations.\n\nOn depth/precision, A is more detailed and structured, with richer schema and protocol mechanics. B is decent but less deep and includes duplicated/truncated content, which hurts quality.\n\nTherefore A wins decisively."
+}

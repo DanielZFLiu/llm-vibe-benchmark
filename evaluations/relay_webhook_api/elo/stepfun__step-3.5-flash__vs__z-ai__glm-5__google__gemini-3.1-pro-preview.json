@@ -1,0 +1,15 @@
+{
+  "judge": "google/gemini-3.1-pro-preview",
+  "modelA": "stepfun/step-3.5-flash",
+  "modelB": "z-ai/glm-5",
+  "winner": "B",
+  "criterionWinners": {
+    "correctness_and_completeness": "B",
+    "dotnet10_idioms": "tie",
+    "background_service_and_channels": "B",
+    "resilience_and_retry": "B",
+    "data_model_and_ef_core": "B",
+    "code_quality_and_structure": "B"
+  },
+  "reasoning": "Response B is the clear winner due to its strict adherence to the technical constraints and superior system design. Most notably, Response A completely ignored the requirement to use Microsoft.Extensions.Http.Resilience, falling back to an explicitly forbidden manual `for` loop with `Task.Delay`. Response B correctly configured the resilience pipeline and implemented a brilliant `DelegatingHandler` (AttemptTrackingHandler) to seamlessly extract the true attempt count from the internal retry library. Additionally, Response B improves correctness by writing `Pending` delivery attempts to the database synchronously before returning HTTP 202, guaranteeing that immediate subsequent queries to the deliveries endpoint accurately reflect the fan-out state. Response B also implements a highly robust graceful shutdown logic by transferring the channel reader to the `StopAsync` method to drain items effectively after the background service's main loop token is cancelled."
+}

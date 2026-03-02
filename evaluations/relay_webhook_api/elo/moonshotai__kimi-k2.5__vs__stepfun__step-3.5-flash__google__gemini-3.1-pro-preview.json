@@ -1,0 +1,15 @@
+{
+  "judge": "google/gemini-3.1-pro-preview",
+  "modelA": "moonshotai/kimi-k2.5",
+  "modelB": "stepfun/step-3.5-flash",
+  "winner": "B",
+  "criterionWinners": {
+    "correctness_and_completeness": "B",
+    "dotnet10_idioms": "B",
+    "background_service_and_channels": "tie",
+    "resilience_and_retry": "A",
+    "data_model_and_ef_core": "B",
+    "code_quality_and_structure": "B"
+  },
+  "reasoning": "Response A provides a vastly superior application overall, correctly implementing complex requirements like per-IP rate limiting, byte-level payload validation, strict JSON formatting, and functional dead-lettering. Although Response A explicitly violates the instruction to use 'Microsoft.Extensions.Http.Resilience' (opting instead for a manual retry loop), its logic accurately fulfills all functional constraints. Response B attempts to use the required resilience library, but registers its tracking handler outside the resilience loop. As a result, the database attempt count never increments beyond 1, and the dead-letter phase (status = failed) is permanently broken. Furthermore, Response B misses the per-IP rate limiting (using a global limiter instead), uses .NET 9.0 NuGet packages instead of 10.0, and executes an O(N) blocking database insert directly in the publish endpoint rather than deferring fan-out resolution to the background worker. Both responses share a minor flaw in graceful shutdown by canceling the reader token instead of awaiting the channel's completion. Response A wins heavily on correctness, framework features, and overall code structure."
+}

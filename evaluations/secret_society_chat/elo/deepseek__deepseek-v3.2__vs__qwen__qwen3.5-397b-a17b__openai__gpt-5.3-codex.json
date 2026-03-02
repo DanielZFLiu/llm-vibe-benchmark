@@ -1,0 +1,15 @@
+{
+  "judge": "openai/gpt-5.3-codex",
+  "modelA": "deepseek/deepseek-v3.2",
+  "modelB": "qwen/qwen3.5-397b-a17b",
+  "winner": "B",
+  "criterionWinners": {
+    "encryption_soundness": "B",
+    "architecture_fitness": "B",
+    "invite_system_design": "B",
+    "security_model": "B",
+    "self_hosting_practicality": "B",
+    "design_depth_and_precision": "B"
+  },
+  "reasoning": "Response A is stronger across all criteria. It is more internally consistent, better aligned with the single-VPS/self-hosted constraint, and more precise about protocol/data/ops boundaries.\n\nOn encryption, A gives a coherent Signal-like design (prekeys + Double Ratchet for 1:1, sender keys for groups) with explicit forward secrecy behavior, compromise implications, and a practical key restore trade-off. B references “Signal + MLS extensions” but the group section is hand-wavy and mixes concepts without enough implementation clarity; some claims are overconfident relative to unspecified key verification and trust-on-first-use concerns.\n\nOn architecture fitness, A’s Go monolith + Postgres + Caddy + local blob storage is right-sized and operationally realistic for ~1,000 users. B’s SQLite choice is simple but more questionable for sustained concurrent chat workloads and is less convincingly justified.\n\nInvite lifecycle is more complete in A: generation, one-time redemption, expiry, rate limits, replay prevention, auditable chain, and explicit downstream policy (“soft pruning”) when a member is revoked. B covers many pieces but includes some crypto ceremony that doesn’t clearly add practical security and is weaker on nuanced abuse/transfer reality.\n\nSecurity model is clearer in A: explicit metadata visibility, DB exfiltration consequences, device-compromise blast radius, and invite limitations. B is decent but has a few claims that are less rigorously bounded.\n\nSelf-hosting practicality is also better in A with concrete Docker Compose decomposition, dependency list, backup commands, restore flow, and minimal monitoring guidance appropriate to a non-specialist operator.\n\nFinally, A has better design depth and precision: clearer schema boundaries (plaintext vs ciphertext), real-time flow, and explicit trade-offs tied to constraints."
+}

@@ -1,0 +1,15 @@
+{
+  "judge": "google/gemini-3.1-pro-preview",
+  "modelA": "stepfun/step-3.5-flash",
+  "modelB": "z-ai/glm-5",
+  "winner": "A",
+  "criterionWinners": {
+    "encryption_soundness": "A",
+    "architecture_fitness": "A",
+    "invite_system_design": "A",
+    "security_model": "A",
+    "self_hosting_practicality": "A",
+    "design_depth_and_precision": "A"
+  },
+  "reasoning": "Response A is a masterclass in system design for the stated constraints. It provides incredible technical depth, including exact cryptographic primitives, JSON payload structures, a complete SQLite schema, and a functional `docker-compose.yml` sketch. It explicitly makes and justifies trade-offs (e.g., opting for SQLite to simplify self-hosting, skipping one-time prekeys for architectural simplicity given the threat model). Response B is a solid high-level document, but it lacks the precision and actionable detail of A. Furthermore, Response B suffers from a severe generation glitch where the entire response restarts near the end, making it structurally flawed. Response A wins decisively across all categories due to its superior depth, technical accuracy, and alignment with the constraints."
+}

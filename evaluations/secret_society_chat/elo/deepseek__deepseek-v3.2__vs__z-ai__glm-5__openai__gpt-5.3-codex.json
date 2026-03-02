@@ -1,0 +1,15 @@
+{
+  "judge": "openai/gpt-5.3-codex",
+  "modelA": "deepseek/deepseek-v3.2",
+  "modelB": "z-ai/glm-5",
+  "winner": "A",
+  "criterionWinners": {
+    "encryption_soundness": "A",
+    "architecture_fitness": "A",
+    "invite_system_design": "A",
+    "security_model": "A",
+    "self_hosting_practicality": "A",
+    "design_depth_and_precision": "A"
+  },
+  "reasoning": "Response A is stronger overall across nearly all criteria. It is more complete, more concrete, and better aligned with the stated constraints (single VPS, right-sized complexity, and explicit operational guidance). Response B is solid in parts, but it is less detailed, has notable omissions, and contains quality issues (duplicated/truncated section text) that reduce precision.\n\nOn encryption, both use Signal-family ideas (X3DH + Double Ratchet), but A is more complete on storage, metadata visibility, and restore flow. B’s use of Ed25519 identity keys with X3DH is under-specified/cryptographically awkward unless conversion details are provided. B’s sender-key group approach is reasonable, but A still wins on end-to-end completeness for this prompt.\n\nOn architecture, A is better right-sized for 1,000 users and non-specialist self-hosting (Go + SQLite + local blob storage + Docker Compose). B’s architecture is workable but drifts slightly toward unnecessary components in the diagram (LB + separate TLS terminator) for a single-node deployment.\n\nOn invite lifecycle, A provides fuller lifecycle handling (generation, validation, auditable chain, revocation, anti-abuse controls, replay prevention, and post-removal behavior). B covers basics well but with less depth and fewer controls.\n\nOn threat model/security boundaries, both are good, but A is more explicit about what the operator can/can’t do and includes clearer limitations and mitigations.\n\nOn self-hosting practicality, A gives a clearer runbook: stack, dependencies, backup cadence, restore steps, and monitoring signals. B gives deployment and backups but less operational detail.\n\nOn depth and precision, A clearly addresses all required sections with schema detail, protocol flow, and explicit trade-offs. B is competent but less thorough and has formatting/content duplication artifacts that hurt confidence."
+}

@@ -1,0 +1,15 @@
+{
+  "judge": "openai/gpt-5.3-codex",
+  "modelA": "minimax/minimax-m2.5",
+  "modelB": "moonshotai/kimi-k2.5",
+  "winner": "A",
+  "criterionWinners": {
+    "component_architecture_and_react_patterns": "A",
+    "typescript_strictness": "B",
+    "drag_and_drop_implementation": "A",
+    "accessibility_and_keyboard_support": "A",
+    "search_filter_and_undo": "A",
+    "code_quality_and_project_setup": "A"
+  },
+  "reasoning": "Response A is the stronger submission overall because it is substantially more complete and coherent as a runnable app, while Response B has multiple hard breakages and appears incomplete (notably a truncated Column file and unresolved/commented logic). \n\nOn architecture, A provides a full Board > Column > Card flow with Context + useReducer and a functioning state lifecycle, though it under-delivers on the required hook decomposition (it only really uses a keyboard shortcut hook; localStorage/undo/DnD are not split into dedicated hooks as requested). B defines more custom hooks on paper (useLocalStorage, useUndoHistory, useDragAndDrop, useKeyboardShortcuts), but integration is inconsistent and incomplete, so the practical architecture is weaker.\n\nOn TypeScript, both are in strict mode with decent type models and action unions. B has slightly more exhaustive compiler flags and good generic usage (e.g., useLocalStorage<T>), so B edges A here.\n\nFor drag-and-drop, A implements HTML5 DnD events and cross-column movement with visual highlighting, but within-column reordering is weak/likely incorrect and column reordering is not truly implemented in UI. B appears to aim for richer placeholders and both card/column dragging, but the implementation is incomplete and not reliably functional from provided files. A is still the safer/better delivered implementation.\n\nAccessibility/keyboard: A includes ARIA labels, live region text, keyboard handlers, and dark mode toggle with persistence + system preference default. Its Alt+Arrow flow has flaws (selected card wiring is incomplete), but B lacks dark-mode persistence entirely and is less complete end-to-end.\n\nSearch/filter/undo: A clearly implements real-time search, multi-select priority/tag filtering, and dims non-matching cards instead of removing them. It also has Ctrl/Cmd+Z undo with a 20-item history mechanism tied to major actions. B defines undo hook logic but does not convincingly integrate it into board actions; functionality is uncertain.\n\nCode quality/setup: A has cleaner end-to-end continuity and is much closer to runnable. B has critical setup/code issues (e.g., invalid lucide-react import usage without dependency, duplicate Search symbol, unfinished component code), making it less likely to run as-is.\n\nTherefore A wins decisively despite some requirement gaps."
+}

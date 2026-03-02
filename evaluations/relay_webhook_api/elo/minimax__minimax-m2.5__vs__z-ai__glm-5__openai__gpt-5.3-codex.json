@@ -1,0 +1,15 @@
+{
+  "judge": "openai/gpt-5.3-codex",
+  "modelA": "minimax/minimax-m2.5",
+  "modelB": "z-ai/glm-5",
+  "winner": "B",
+  "criterionWinners": {
+    "correctness_and_completeness": "B",
+    "dotnet10_idioms": "B",
+    "background_service_and_channels": "B",
+    "resilience_and_retry": "B",
+    "data_model_and_ef_core": "tie",
+    "code_quality_and_structure": "B"
+  },
+  "reasoning": "Response B is the stronger implementation overall. Both provide the required endpoint surface and multi-file structure, but A has several critical functional issues: the delivery worker is registered as a singleton but never registered as a hosted service, so background fan-out likely never runs; its channel-drain logic discards queued items instead of processing them; and delivery processing relies on brittle logic (fetching an arbitrary pending delivery, concrete-type casting, possible duplicate-attempt creation against a unique index). A’s retry implementation is also questionable (custom pipeline construction that may not match current APIs, likely wrong total-attempt semantics, and retries on all non-success codes). B is not perfect either: rate limiting is not per-IP as required, retry policy still retries 4xx, and some ProblemDetails paths use Results.BadRequest/NotFound instead of TypedResults. But B correctly wires Channel<T> through DI to a hosted BackgroundService, processes queued work items asynchronously, includes graceful shutdown draining behavior, has cleaner separation of concerns (DTOs/services), and uses HttpClient resilience integration in a much more idiomatic way. So despite shortcomings, B is more likely to run and satisfy the core publish→fan-out→track flow."
+}
