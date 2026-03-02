@@ -112,7 +112,7 @@ Standard evaluation asks judges to assign absolute scores (0-100), which can suf
 
 1. **Generate** responses as usual.
 2. **Evaluate with `--elo`** — For each task, every pair of models is compared by every judge (N*(N-1)/2 pairs per task per judge).
-3. **Report with `--elo`** — ELO ratings are computed using iterative updates (K=32, 10 convergence passes) and scaled to 0-100
+3. **Report with `--elo`** — ELO ratings are computed iteratively over 50 convergence passes. 
 
 ### Comparison Cost
 
