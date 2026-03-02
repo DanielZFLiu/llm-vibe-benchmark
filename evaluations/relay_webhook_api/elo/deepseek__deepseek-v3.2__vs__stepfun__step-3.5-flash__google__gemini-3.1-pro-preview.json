@@ -1,0 +1,15 @@
+{
+  "judge": "google/gemini-3.1-pro-preview",
+  "modelA": "deepseek/deepseek-v3.2",
+  "modelB": "stepfun/step-3.5-flash",
+  "winner": "A",
+  "criterionWinners": {
+    "correctness_and_completeness": "A",
+    "dotnet10_idioms": "B",
+    "background_service_and_channels": "A",
+    "resilience_and_retry": "A",
+    "data_model_and_ef_core": "A",
+    "code_quality_and_structure": "A"
+  },
+  "reasoning": "Response A provides a vastly superior architectural implementation for a background webhook fan-out service. It immediately persists `DeliveryAttempts` as 'Pending', queues each attempt individually to achieve parallel queueing for fan-out, and implements graceful drain in `StopAsync` exactly as requested. Importantly, Response A obeys the negative constraint to use `Microsoft.Extensions.Http.Resilience` instead of a manual retry loop, whereas Response B completely ignores this requirement and uses an explicitly forbidden `for` loop with `Task.Delay`. Response A does have minor hallucinated property names for the HTTP resilience options (`TotalRetryAttempts` instead of `MaxRetryAttempts`), which will cause a compilation error, but Response B's architectural flaws are severe: it operates a sequential blocking loop for subscribers without saving any state to the database until the very end, meaning in-flight tracking is nonexistent. Response B correctly partitions the rate limiter by IP (which A missed) and excels slightly on pure minimal API idioms (`TypedResults`), but Response A dominates on structure, proper background service behavior, and data modeling."
+}

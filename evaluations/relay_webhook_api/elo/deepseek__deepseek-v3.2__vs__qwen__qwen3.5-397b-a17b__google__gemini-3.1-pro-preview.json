@@ -1,0 +1,15 @@
+{
+  "judge": "google/gemini-3.1-pro-preview",
+  "modelA": "deepseek/deepseek-v3.2",
+  "modelB": "qwen/qwen3.5-397b-a17b",
+  "winner": "A",
+  "criterionWinners": {
+    "correctness_and_completeness": "A",
+    "dotnet10_idioms": "A",
+    "background_service_and_channels": "A",
+    "resilience_and_retry": "A",
+    "data_model_and_ef_core": "A",
+    "code_quality_and_structure": "A"
+  },
+  "reasoning": "Response A provides a more complete and functionally correct implementation overall, addressing edge cases and framework specifics better than Response B. Response A handles the 'drain in-flight deliveries' requirement perfectly by synchronously clearing the channel in StopAsync before letting the application shut down, whereas Response B halts reading from the channel and only waits for currently active tasks, potentially abandoning queued items. Response A explicitly provides EF core migrations as requested, while Response B bypasses this using EnsureCreatedAsync only. Response A accurately avoids retrying 4xx HTTP responses by relying on the built-in Microsoft.Extensions.Http.Resilience standard handler configurations, whereas Response B explicitly targets `!IsSuccessStatusCode`, forcing it to retry 400 Bad Request responses endlessly. Most importantly, Response B contains a fatal runtime bug in its RateLimiting setup: it registers a GlobalLimiter but the endpoint requires a named policy ('fixed') which is never registered, resulting in an unhandled exception when any webhook is published. Response A misses the 'per-IP' detail in the RateLimiter and has a minor hallucination regarding property names for the Polly Retry configuration, but executes cleanly once that syntax is corrected. Response A also strictly propagates CancellationTokens throughout all Entity Framework bounds, whereas Response B overlooks them in multiple DB queries."
+}

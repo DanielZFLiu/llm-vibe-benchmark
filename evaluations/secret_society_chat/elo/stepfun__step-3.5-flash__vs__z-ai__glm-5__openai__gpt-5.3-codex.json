@@ -1,0 +1,15 @@
+{
+  "judge": "openai/gpt-5.3-codex",
+  "modelA": "stepfun/step-3.5-flash",
+  "modelB": "z-ai/glm-5",
+  "winner": "A",
+  "criterionWinners": {
+    "encryption_soundness": "B",
+    "architecture_fitness": "A",
+    "invite_system_design": "A",
+    "security_model": "A",
+    "self_hosting_practicality": "A",
+    "design_depth_and_precision": "A"
+  },
+  "reasoning": "Both responses are strong, but with different profiles. Response A is cleaner and more internally coherent on cryptography: it correctly frames a Signal-style approach (IK + signed prekeys + one-time prekeys + Double Ratchet + sender keys), keeps server blindness central, and avoids major protocol-level contradictions. Response B is broader and more detailed operationally, but its crypto section has notable correctness and rigor issues (e.g., inconsistent X3DH description, explicit omission of one-time prekeys, and stream-of-consciousness uncertainty in key derivation and storage decisions). For a system with a hard E2E requirement, that matters a lot.\n\nOn architecture and operations, B is more concrete for self-hosting: explicit single-VPS sizing, Docker flow, health checks, backup/restore steps for DB and uploads, and monitoring signals. A is also practical but lighter on observability and runbook details.\n\nInvite system: both cover lifecycle well. B is more exhaustive (expiry, max uses, rate limits, replay, audit traversal), though it introduces a questionable choice by storing plain invite_id in schema comments; A is cleaner and safer in spirit. Still, B is more complete in abuse controls.\n\nThreat model: B is more explicit and nuanced (including MITM caveat and limits), while A is solid but less expansive.\n\nDepth/precision overall: B has greater breadth and section-by-section depth, but A is more precise and less self-contradictory. Even so, B covers more of the required operational and protocol surface area in detail.\n\nNet: B is stronger on most rubric dimensions (architecture fit, invite lifecycle completeness, ops practicality, threat-model breadth), while A clearly wins encryption soundness."
+}

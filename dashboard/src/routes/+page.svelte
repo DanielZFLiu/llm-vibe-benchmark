@@ -1,10 +1,49 @@
 <script lang="ts">
 	import { formatTaskName, fmt, pct } from '$lib/utils.js';
 	import type { PageData } from './$types.js';
+	import type { EloMatchup } from '$lib/types.js';
 
 	let { data }: { data: PageData } = $props();
 
 	const topScore = $derived(data.leaderboard[0]?.avgScore ?? 100);
+	const hasElo = $derived(data.eloResults != null && data.eloResults.models.length > 0);
+
+	let mode: 'score' | 'elo' = $state('score');
+
+	// Per-task ELO range for scaling mini-bars
+	function taskEloPct(task: string, elo: number): number {
+		if (!data.eloResults) return 0;
+		const elos = data.eloResults.models
+			.map((m) => m.taskElos[task])
+			.filter((e): e is number => e != null);
+		if (elos.length === 0) return 0;
+		const min = Math.min(...elos);
+		const max = Math.max(...elos);
+		return max > min ? ((elo - min) / (max - min)) * 100 : 50;
+	}
+
+	// Head-to-head lookup helper
+	function getMatchup(modelA: string, modelB: string): EloMatchup | null {
+		if (!data.eloResults) return null;
+		return data.eloResults.matchups.find(
+			(m) =>
+				(m.modelA === modelA && m.modelB === modelB) ||
+				(m.modelA === modelB && m.modelB === modelA)
+		) ?? null;
+	}
+
+	function matchupLabel(rowModel: string, colModel: string): { text: string; cls: string } {
+		const mu = getMatchup(rowModel, colModel);
+		if (!mu) return { text: '--', cls: '' };
+
+		const rowWins = rowModel === mu.modelA ? mu.winsA : mu.winsB;
+		const colWins = rowModel === mu.modelA ? mu.winsB : mu.winsA;
+		const total = rowWins + colWins + mu.ties;
+
+		if (rowWins > colWins) return { text: `${rowWins}W-${colWins}L`, cls: 'win' };
+		if (rowWins < colWins) return { text: `${rowWins}W-${colWins}L`, cls: 'loss' };
+		return { text: `${rowWins}-${colWins}`, cls: 'draw' };
+	}
 </script>
 
 <svelte:head>
@@ -21,87 +60,237 @@
 	</div>
 	<h1 class="hero-title">Leaderboard</h1>
 	<p class="hero-sub">
-		Models ranked by average score across all tasks and judges.
-		Click any model to explore its responses and per-judge evaluations.
+		{#if mode === 'elo'}
+			Models ranked by pairwise ELO ratings across all tasks and judges.
+		{:else}
+			Models ranked by average score across all tasks and judges.
+		{/if}
+		Click any model to explore its evaluations.
 	</p>
 </section>
 
-<!-- ── Main Rankings ─────────────────────────────────────────── -->
-<section class="rankings">
-	{#each data.leaderboard as entry, i (entry.modelDir)}
-		<a href="/model/{entry.modelDir}" class="rank-row">
-			<span class="rank-num" class:gold={i === 0} class:silver={i === 1} class:bronze={i === 2}>
-				#{i + 1}
-			</span>
+<!-- ── Mode Toggle ───────────────────────────────────────────── -->
+{#if hasElo}
+	<div class="mode-toggle-wrap">
+		<div class="mode-toggle">
+			<button
+				class="mode-btn"
+				class:active={mode === 'score'}
+				onclick={() => (mode = 'score')}
+			>
+				Score
+			</button>
+			<button
+				class="mode-btn"
+				class:active={mode === 'elo'}
+				onclick={() => (mode = 'elo')}
+			>
+				ELO
+			</button>
+		</div>
+		<span class="mode-hint">
+			{mode === 'score' ? 'Absolute scores (0-100) averaged across judges' : 'Pairwise comparison ELO ratings'}
+		</span>
+	</div>
+{/if}
 
-			<div class="rank-info">
-				<span class="rank-model">{entry.modelId}</span>
-				<div class="rank-bar-wrap">
-					<div class="rank-bar">
-						<div class="rank-bar-fill" style="width: {pct((entry.avgScore / topScore) * 100)}%"></div>
+{#if mode === 'score'}
+	<!-- ── Main Rankings ─────────────────────────────────────────── -->
+	<section class="rankings">
+		{#each data.leaderboard as entry, i (entry.modelDir)}
+			<a href="/model/{entry.modelDir}" class="rank-row">
+				<span class="rank-num" class:gold={i === 0} class:silver={i === 1} class:bronze={i === 2}>
+					#{i + 1}
+				</span>
+
+				<div class="rank-info">
+					<span class="rank-model">{entry.modelId}</span>
+					<div class="rank-bar-wrap">
+						<div class="rank-bar">
+							<div class="rank-bar-fill" style="width: {pct((entry.avgScore / topScore) * 100)}%"></div>
+						</div>
 					</div>
 				</div>
-			</div>
 
-			<div class="rank-stats">
-				<span class="rank-score">{fmt(entry.avgScore)}</span>
-				<span class="rank-stddev">±{fmt(entry.stdDev)}</span>
-			</div>
-		</a>
-	{/each}
-</section>
+				<div class="rank-stats">
+					<span class="rank-score">{fmt(entry.avgScore)}</span>
+					<span class="rank-stddev">±{fmt(entry.stdDev)}</span>
+				</div>
+			</a>
+		{/each}
+	</section>
 
-<!-- ── Task Comparison Matrix ────────────────────────────────── -->
-<section class="matrix-section">
-	<h2 class="section-label">Per-Task Scores</h2>
-	<div class="matrix-wrap">
-		<table class="matrix">
-			<thead>
-				<tr>
-					<th class="th-model">Model</th>
-					{#each data.tasks as task}
-						<th>
-							<a href="/task/{task}">{formatTaskName(task)}</a>
-						</th>
-					{/each}
-					<th class="th-avg">Avg</th>
-				</tr>
-			</thead>
-			<tbody>
-				{#each data.leaderboard as entry, i}
+	<!-- ── Task Comparison Matrix ────────────────────────────────── -->
+	<section class="matrix-section">
+		<h2 class="section-label">Per-Task Scores</h2>
+		<div class="matrix-wrap">
+			<table class="matrix">
+				<thead>
 					<tr>
-						<td class="td-model">
-							<a href="/model/{entry.modelDir}" class="model-link">
-								<span class="model-rank">#{i + 1}</span>
-								{entry.modelId}
-							</a>
-						</td>
+						<th class="th-model">Model</th>
 						{#each data.tasks as task}
-							<td class="td-score">
-								{#if entry.taskScores[task] != null}
-									<a href="/task/{task}" class="score-cell">
-										<span class="score-val">{fmt(entry.taskScores[task])}</span>
-										<div class="mini-bar">
-											<div
-												class="mini-bar-fill"
-												style="width: {pct(entry.taskScores[task])}%"
-											></div>
-										</div>
-									</a>
-								{:else}
-									<span class="score-na">—</span>
-								{/if}
-							</td>
+							<th>
+								<a href="/task/{task}">{formatTaskName(task)}</a>
+							</th>
 						{/each}
-						<td class="td-avg">
-							<strong>{fmt(entry.avgScore)}</strong>
-						</td>
+						<th class="th-avg">Avg</th>
 					</tr>
-				{/each}
-			</tbody>
-		</table>
-	</div>
-</section>
+				</thead>
+				<tbody>
+					{#each data.leaderboard as entry, i}
+						<tr>
+							<td class="td-model">
+								<a href="/model/{entry.modelDir}" class="model-link">
+									<span class="model-rank">#{i + 1}</span>
+									{entry.modelId}
+								</a>
+							</td>
+							{#each data.tasks as task}
+								<td class="td-score">
+									{#if entry.taskScores[task] != null}
+										<a href="/task/{task}" class="score-cell">
+											<span class="score-val">{fmt(entry.taskScores[task])}</span>
+											<div class="mini-bar">
+												<div
+													class="mini-bar-fill"
+													style="width: {pct(entry.taskScores[task])}%"
+												></div>
+											</div>
+										</a>
+									{:else}
+										<span class="score-na">—</span>
+									{/if}
+								</td>
+							{/each}
+							<td class="td-avg">
+								<strong>{fmt(entry.avgScore)}</strong>
+							</td>
+						</tr>
+					{/each}
+				</tbody>
+			</table>
+		</div>
+	</section>
+{:else if data.eloResults}
+	<!-- ── ELO Rankings ──────────────────────────────────────────── -->
+	<section class="rankings">
+		{#each data.eloResults.models as entry, i (entry.model)}
+			{@const topElo = data.eloResults.models[0]?.elo ?? 1500}
+			<a href="/model/{entry.model}" class="rank-row">
+				<span class="rank-num" class:gold={i === 0} class:silver={i === 1} class:bronze={i === 2}>
+					#{i + 1}
+				</span>
+
+				<div class="rank-info">
+					<span class="rank-model">{entry.modelId}</span>
+					<div class="rank-bar-wrap">
+						<div class="rank-bar">
+							<div class="rank-bar-fill" style="width: {pct(entry.scaled)}%"></div>
+						</div>
+					</div>
+				</div>
+
+				<div class="rank-stats">
+					<span class="rank-score">{entry.elo}</span>
+					<span class="rank-stddev elo-record">{entry.wins}W {entry.losses}L {entry.ties}T</span>
+				</div>
+			</a>
+		{/each}
+	</section>
+
+	<!-- ── Per-Task ELO Matrix ───────────────────────────────────── -->
+	<section class="matrix-section">
+		<h2 class="section-label">Per-Task ELO</h2>
+		<div class="matrix-wrap">
+			<table class="matrix">
+				<thead>
+					<tr>
+						<th class="th-model">Model</th>
+						{#each data.tasks as task}
+							<th>
+								<a href="/task/{task}">{formatTaskName(task)}</a>
+							</th>
+						{/each}
+						<th class="th-avg">Global</th>
+					</tr>
+				</thead>
+				<tbody>
+					{#each data.eloResults.models as entry, i}
+						<tr>
+							<td class="td-model">
+								<a href="/model/{entry.model}" class="model-link">
+									<span class="model-rank">#{i + 1}</span>
+									{entry.modelId}
+								</a>
+							</td>
+							{#each data.tasks as task}
+								<td class="td-score">
+									{#if entry.taskElos[task] != null}
+										<a href="/task/{task}" class="score-cell">
+											<span class="score-val">{entry.taskElos[task]}</span>
+											<div class="mini-bar">
+												<div
+													class="mini-bar-fill"
+													style="width: {pct(taskEloPct(task, entry.taskElos[task]))}%"
+												></div>
+											</div>
+										</a>
+									{:else}
+										<span class="score-na">—</span>
+									{/if}
+								</td>
+							{/each}
+							<td class="td-avg">
+								<strong>{entry.elo}</strong>
+							</td>
+						</tr>
+					{/each}
+				</tbody>
+			</table>
+		</div>
+	</section>
+
+	<!-- ── Head-to-Head Matrix ───────────────────────────────────── -->
+	{#if data.eloResults.matchups.length > 0}
+		<section class="matrix-section">
+			<h2 class="section-label">Head-to-Head</h2>
+			<div class="matrix-wrap">
+				<table class="matrix h2h-matrix">
+					<thead>
+						<tr>
+							<th class="th-model">Model</th>
+							{#each data.eloResults.models as col}
+								<th class="h2h-col-header">{col.modelId.split('/')[1] ?? col.modelId}</th>
+							{/each}
+						</tr>
+					</thead>
+					<tbody>
+						{#each data.eloResults.models as row, ri}
+							<tr>
+								<td class="td-model">
+									<a href="/model/{row.model}" class="model-link">
+										<span class="model-rank">#{ri + 1}</span>
+										{row.modelId}
+									</a>
+								</td>
+								{#each data.eloResults.models as col}
+									<td class="td-h2h">
+										{#if row.model === col.model}
+											<span class="h2h-self">--</span>
+										{:else}
+											{@const result = matchupLabel(row.model, col.model)}
+											<span class="h2h-cell {result.cls}">{result.text}</span>
+										{/if}
+									</td>
+								{/each}
+							</tr>
+						{/each}
+					</tbody>
+				</table>
+			</div>
+		</section>
+	{/if}
+{/if}
 
 <!-- ── Tasks Quick Access ────────────────────────────────────── -->
 <section class="tasks-section">
@@ -119,7 +308,7 @@
 <style lang="scss">
 	// ── Hero ───────────────────────────────────────────────────────
 	.hero {
-		margin-bottom: 3rem;
+		margin-bottom: 2rem;
 	}
 
 	.hero-meta {
@@ -149,6 +338,53 @@
 		color: var(--text-muted);
 		max-width: 540px;
 		line-height: 1.6;
+	}
+
+	// ── Mode Toggle ──────────────────────────────────────────────
+	.mode-toggle-wrap {
+		display: flex;
+		align-items: center;
+		gap: 1rem;
+		margin-bottom: 2rem;
+	}
+
+	.mode-toggle {
+		display: flex;
+		background: var(--surface);
+		border: 1px solid var(--border);
+		border-radius: var(--radius);
+		overflow: hidden;
+	}
+
+	.mode-btn {
+		padding: 0.45rem 1.1rem;
+		border: none;
+		background: transparent;
+		font-size: 0.82rem;
+		font-weight: 600;
+		color: var(--text-muted);
+		cursor: pointer;
+		transition: background 0.12s, color 0.12s;
+		font-family: var(--font);
+
+		&:not(:last-child) {
+			border-right: 1px solid var(--border);
+		}
+
+		&:hover {
+			background: var(--surface-hover);
+			color: var(--text);
+		}
+
+		&.active {
+			background: var(--accent-faint);
+			color: var(--accent);
+		}
+	}
+
+	.mode-hint {
+		font-size: 0.78rem;
+		color: var(--text-faint);
 	}
 
 	// ── Rankings ──────────────────────────────────────────────────
@@ -255,6 +491,12 @@
 		font-size: 0.72rem;
 		color: var(--text-faint);
 		font-variant-numeric: tabular-nums;
+	}
+
+	.elo-record {
+		font-size: 0.72rem;
+		color: var(--text-faint);
+		letter-spacing: 0.02em;
 	}
 
 	// ── Section label ────────────────────────────────────────────
@@ -391,6 +633,48 @@
 
 	.score-na {
 		color: var(--text-faint);
+	}
+
+	// ── Head-to-Head Matrix ──────────────────────────────────────
+	.h2h-matrix {
+		th, td {
+			text-align: center;
+			padding: 0.55rem 0.6rem;
+		}
+	}
+
+	.h2h-col-header {
+		max-width: 100px;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		font-size: 0.7rem !important;
+	}
+
+	.td-h2h {
+		min-width: 80px;
+	}
+
+	.h2h-self {
+		color: var(--border);
+		font-size: 0.8rem;
+	}
+
+	.h2h-cell {
+		font-size: 0.78rem;
+		font-weight: 600;
+		font-variant-numeric: tabular-nums;
+
+		&.win {
+			color: #16a34a;
+		}
+
+		&.loss {
+			color: #dc2626;
+		}
+
+		&.draw {
+			color: var(--text-muted);
+		}
 	}
 
 	// ── Tasks section ─────────────────────────────────────────────

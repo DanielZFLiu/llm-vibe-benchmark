@@ -1,0 +1,15 @@
+{
+  "judge": "google/gemini-3.1-pro-preview",
+  "modelA": "moonshotai/kimi-k2.5",
+  "modelB": "z-ai/glm-5",
+  "winner": "A",
+  "criterionWinners": {
+    "encryption_soundness": "tie",
+    "architecture_fitness": "tie",
+    "invite_system_design": "A",
+    "security_model": "A",
+    "self_hosting_practicality": "A",
+    "design_depth_and_precision": "A"
+  },
+  "reasoning": "Response B is exceptionally well-designed and thoroughly covers all constraints. It appropriately sizes the architecture (Go + Postgres + WebSockets) and provides practical deployment configurations, including a detailed `docker-compose.yml`. Response B's invite system is particularly clever, using client-generated secrets and hashes to ensure the server never sees the raw invite token prior to redemption, precisely answering the prompt's constraints. Response B also natively handles groups in its Data Model (which Response A completely omits despite groups being a requirement). Response A offers a clever approach to hiding typing indicators as encrypted E2EE payloads, but ultimately falls short due to an incomplete database schema, a less cryptographically sound invite system, and visibly cutting off mid-sentence at the end of the generation."
+}

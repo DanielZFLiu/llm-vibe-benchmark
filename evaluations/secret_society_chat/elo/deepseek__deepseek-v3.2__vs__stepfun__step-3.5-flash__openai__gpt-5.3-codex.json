@@ -1,0 +1,15 @@
+{
+  "judge": "openai/gpt-5.3-codex",
+  "modelA": "deepseek/deepseek-v3.2",
+  "modelB": "stepfun/step-3.5-flash",
+  "winner": "B",
+  "criterionWinners": {
+    "encryption_soundness": "B",
+    "architecture_fitness": "B",
+    "invite_system_design": "B",
+    "security_model": "B",
+    "self_hosting_practicality": "B",
+    "design_depth_and_precision": "B"
+  },
+  "reasoning": "Response A is stronger on nearly every axis because it is much more concrete, operationally grounded, and explicit about trade-offs. It provides a full end-to-end design with component responsibilities, deployment topology, crypto primitives, message flows, invite lifecycle, schema-level data model, realtime protocol details, backup/restore, and a detailed threat model.\n\nResponse B has a solid high-level structure and some good choices (Go + SQLite + WebSocket), but it is more superficial and occasionally inconsistent. Its crypto section mixes “Signal + MLS extensions” without enough implementation precision for a small self-hosted system, and some details are questionable (e.g., server-signed identity keys framing, vague MLS handling). Its invite flow is interesting but overcomplicated for the constraints and less clearly tied to auditable chain behavior and operational realities than A.\n\nA is not perfect: it explicitly weakens initial-session FS by skipping one-time prekeys and uses a simpler non-FS group key model. However, those compromises are acknowledged, and the design remains much more actionable and complete than B. On balance, A better satisfies the prompt’s requirement for a thorough, precise system design document tailored to a single-VPS self-hosted community app."
+}

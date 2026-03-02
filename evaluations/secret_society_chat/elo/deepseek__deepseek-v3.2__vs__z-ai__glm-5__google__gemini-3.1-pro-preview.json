@@ -1,0 +1,15 @@
+{
+  "judge": "google/gemini-3.1-pro-preview",
+  "modelA": "deepseek/deepseek-v3.2",
+  "modelB": "z-ai/glm-5",
+  "winner": "A",
+  "criterionWinners": {
+    "encryption_soundness": "A",
+    "architecture_fitness": "A",
+    "invite_system_design": "A",
+    "security_model": "A",
+    "self_hosting_practicality": "A",
+    "design_depth_and_precision": "A"
+  },
+  "reasoning": "Response A is outstanding in its depth, precision, and alignment with the constraints. The choice of SQLite over PostgreSQL (Response B) is a perfect architectural fit for a 1,000-user, casually self-hosted application, making backups and deployment significantly simpler. Response A deeply addresses the challenging prompt constraints, such as using an ephemeral key exchange to validate invites without the server learning who the invitee is before they register. It also explicitly lists trade-offs, provides raw SQL schemas and JSON payloads, and clearly maps out the X3DH key exchange protocol. Response B, while having a decent foundational design (Signal Double Ratchet, Go, WebSockets), suffers from a severe generation error where the text abruptly restarts and loops the entire prompt back from the beginning during the Threat Model section. Response A is the clear winner across all categories."
+}

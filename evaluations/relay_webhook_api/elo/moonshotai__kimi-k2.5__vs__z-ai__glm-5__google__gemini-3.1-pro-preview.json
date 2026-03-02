@@ -1,0 +1,15 @@
+{
+  "judge": "google/gemini-3.1-pro-preview",
+  "modelA": "moonshotai/kimi-k2.5",
+  "modelB": "z-ai/glm-5",
+  "winner": "B",
+  "criterionWinners": {
+    "correctness_and_completeness": "B",
+    "dotnet10_idioms": "A",
+    "background_service_and_channels": "B",
+    "resilience_and_retry": "B",
+    "data_model_and_ef_core": "B",
+    "code_quality_and_structure": "B"
+  },
+  "reasoning": "Response A provides a vastly more robust and functionally correct implementation. Response B contains two critical logical flaws: First, in POST /events, it writes to the Channel before committing the EF transaction, causing a race condition where the DeliveryWorker will frequently query the DB and find nothing (silently dropping the webhook). Second, B places the AttemptTrackingHandler outermost in the HTTP pipeline (before the ResilienceHandler), meaning its tracking logic is only called once per delivery instead of per-attempt, permanently breaking the dead-letter tracking loop. Response A avoids the transaction race condition, properly orders its HTTP handlers so state is tracked accurately, and implements a fully graceful shutdown by safely draining the channel in StopAsync. While A slightly misses the mark on retrying 4xx errors and does not utilize TypedResults for its routing, it succeeds end-to-end on the critical path, whereas B drops deliveries and breaks status tracking."
+}

@@ -1,0 +1,195 @@
+{
+  "models": [
+    {
+      "model": "moonshotai__kimi-k2.5",
+      "elo": 1605,
+      "scaled": 100,
+      "wins": 41,
+      "losses": 19,
+      "ties": 0,
+      "taskElos": {
+        "log_analysis_cli": 1854,
+        "react_kanban_board": 1248,
+        "relay_webhook_api": 1649,
+        "secret_society_chat": 1741
+      }
+    },
+    {
+      "model": "z-ai__glm-5",
+      "elo": 1605,
+      "scaled": 100,
+      "wins": 41,
+      "losses": 19,
+      "ties": 0,
+      "taskElos": {
+        "log_analysis_cli": 1656,
+        "react_kanban_board": 1752,
+        "relay_webhook_api": 1848,
+        "secret_society_chat": 1258
+      }
+    },
+    {
+      "model": "deepseek__deepseek-v3.2",
+      "elo": 1509,
+      "scaled": 56.5,
+      "wins": 31,
+      "losses": 29,
+      "ties": 0,
+      "taskElos": {
+        "log_analysis_cli": 1566,
+        "react_kanban_board": 1478,
+        "relay_webhook_api": 1560,
+        "secret_society_chat": 1435
+      }
+    },
+    {
+      "model": "qwen__qwen3.5-397b-a17b",
+      "elo": 1462,
+      "scaled": 35.1,
+      "wins": 26,
+      "losses": 34,
+      "ties": 0,
+      "taskElos": {
+        "log_analysis_cli": 1478,
+        "react_kanban_board": 1522,
+        "relay_webhook_api": 1344,
+        "secret_society_chat": 1477
+      }
+    },
+    {
+      "model": "minimax__minimax-m2.5",
+      "elo": 1433,
+      "scaled": 22.2,
+      "wins": 23,
+      "losses": 37,
+      "ties": 0,
+      "taskElos": {
+        "log_analysis_cli": 1249,
+        "react_kanban_board": 1802,
+        "relay_webhook_api": 1299,
+        "secret_society_chat": 1349
+      }
+    },
+    {
+      "model": "stepfun__step-3.5-flash",
+      "elo": 1384,
+      "scaled": 0,
+      "wins": 18,
+      "losses": 42,
+      "ties": 0,
+      "taskElos": {
+        "log_analysis_cli": 1199,
+        "react_kanban_board": 1198,
+        "relay_webhook_api": 1299,
+        "secret_society_chat": 1741
+      }
+    }
+  ],
+  "matchups": [
+    {
+      "modelA": "deepseek__deepseek-v3.2",
+      "modelB": "minimax__minimax-m2.5",
+      "winsA": 8,
+      "winsB": 4,
+      "ties": 0
+    },
+    {
+      "modelA": "deepseek__deepseek-v3.2",
+      "modelB": "moonshotai__kimi-k2.5",
+      "winsA": 4,
+      "winsB": 8,
+      "ties": 0
+    },
+    {
+      "modelA": "deepseek__deepseek-v3.2",
+      "modelB": "qwen__qwen3.5-397b-a17b",
+      "winsA": 6,
+      "winsB": 6,
+      "ties": 0
+    },
+    {
+      "modelA": "deepseek__deepseek-v3.2",
+      "modelB": "stepfun__step-3.5-flash",
+      "winsA": 9,
+      "winsB": 3,
+      "ties": 0
+    },
+    {
+      "modelA": "deepseek__deepseek-v3.2",
+      "modelB": "z-ai__glm-5",
+      "winsA": 4,
+      "winsB": 8,
+      "ties": 0
+    },
+    {
+      "modelA": "minimax__minimax-m2.5",
+      "modelB": "moonshotai__kimi-k2.5",
+      "winsA": 3,
+      "winsB": 9,
+      "ties": 0
+    },
+    {
+      "modelA": "minimax__minimax-m2.5",
+      "modelB": "qwen__qwen3.5-397b-a17b",
+      "winsA": 5,
+      "winsB": 7,
+      "ties": 0
+    },
+    {
+      "modelA": "minimax__minimax-m2.5",
+      "modelB": "stepfun__step-3.5-flash",
+      "winsA": 7,
+      "winsB": 5,
+      "ties": 0
+    },
+    {
+      "modelA": "minimax__minimax-m2.5",
+      "modelB": "z-ai__glm-5",
+      "winsA": 4,
+      "winsB": 8,
+      "ties": 0
+    },
+    {
+      "modelA": "moonshotai__kimi-k2.5",
+      "modelB": "qwen__qwen3.5-397b-a17b",
+      "winsA": 9,
+      "winsB": 3,
+      "ties": 0
+    },
+    {
+      "modelA": "moonshotai__kimi-k2.5",
+      "modelB": "stepfun__step-3.5-flash",
+      "winsA": 9,
+      "winsB": 3,
+      "ties": 0
+    },
+    {
+      "modelA": "moonshotai__kimi-k2.5",
+      "modelB": "z-ai__glm-5",
+      "winsA": 6,
+      "winsB": 6,
+      "ties": 0
+    },
+    {
+      "modelA": "qwen__qwen3.5-397b-a17b",
+      "modelB": "stepfun__step-3.5-flash",
+      "winsA": 8,
+      "winsB": 4,
+      "ties": 0
+    },
+    {
+      "modelA": "qwen__qwen3.5-397b-a17b",
+      "modelB": "z-ai__glm-5",
+      "winsA": 2,
+      "winsB": 10,
+      "ties": 0
+    },
+    {
+      "modelA": "stepfun__step-3.5-flash",
+      "modelB": "z-ai__glm-5",
+      "winsA": 3,
+      "winsB": 9,
+      "ties": 0
+    }
+  ]
+}

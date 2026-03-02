@@ -1,0 +1,15 @@
+{
+  "judge": "openai/gpt-5.3-codex",
+  "modelA": "qwen/qwen3.5-397b-a17b",
+  "modelB": "z-ai/glm-5",
+  "winner": "A",
+  "criterionWinners": {
+    "encryption_soundness": "B",
+    "architecture_fitness": "A",
+    "invite_system_design": "A",
+    "security_model": "A",
+    "self_hosting_practicality": "A",
+    "design_depth_and_precision": "A"
+  },
+  "reasoning": "Response A is stronger overall because it is more complete, operationally grounded, and better aligned with the stated self-hosted/single-VPS constraints. Response B has one major strength: its cryptographic handshake description is more formally correct (explicit X3DH + Double Ratchet with IK/SPK/OPK). However, across the rest of the design requirements, A is consistently more thorough and precise.\n\nCriterion-by-criterion:\n- Encryption soundness: B is better. It explicitly names Signal-style X3DH + Double Ratchet and describes post-compromise security clearly. A is good but less precise in handshake details (more custom-sounding wording).\n- Architecture fitness: A is better. It is clearly right-sized (monolithic Go app + Postgres + Caddy + local storage) for ~1,000 users on one VPS. B introduces a load balancer/TLS terminator split that reads somewhat overbuilt/incoherent for this scale.\n- Invite system design: A is better. It fully covers lifecycle, auditability, revocation semantics, downstream effects of member removal (soft pruning policy), and abuse controls (rate limits, active invite caps, expiry, replay handling). B is solid but less complete and less policy-explicit.\n- Security model: A is better. It more explicitly defines server-visible metadata, DB exfiltration impact, device-compromise blast radius, and invite attack limits. B is decent but less nuanced and occasionally overclaims (e.g., typing/read visibility) relative to routing metadata realities.\n- Self-hosting practicality: A is better. It provides a realistic Docker Compose deployment, dependency list, encrypted backups, restore path, and concrete monitoring/health guidance. B is deployable but lighter on monitoring/runbook detail.\n- Design depth and precision: A is better. It has stronger section completeness, clearer data model detail, explicit encryption boundaries, and explicit trade-off discussion. B is shorter, less complete in schema/protocol details, and includes obvious duplicated text, which hurts precision.\n\nSo while B wins on crypto protocol specificity, A wins decisively on the full system design task as posed."
+}

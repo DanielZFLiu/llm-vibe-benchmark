@@ -1,0 +1,15 @@
+{
+  "judge": "openai/gpt-5.3-codex",
+  "modelA": "minimax/minimax-m2.5",
+  "modelB": "qwen/qwen3.5-397b-a17b",
+  "winner": "A",
+  "criterionWinners": {
+    "correctness_and_completeness": "A",
+    "dotnet10_idioms": "A",
+    "background_service_and_channels": "B",
+    "resilience_and_retry": "B",
+    "data_model_and_ef_core": "A",
+    "code_quality_and_structure": "A"
+  },
+  "reasoning": "Response A is the stronger submission overall, mainly because Response B contains multiple hard compile/runtime blockers, while A is closer to runnable even though it has serious architectural defects.\n\nFor correctness/completeness, both implement the 5 endpoints, but B has major breakages: `DeliveryWorker` is only registered via `AddHostedService` yet injected directly into `/events` (DI resolution failure), and `DeliveryWorker.StopAsync` uses `await` inside `lock` blocks (compile-time error). B also sends/stores the full event envelope JSON instead of just the payload body required for delivery/signing. A has important flaws too (worker not registered as hosted service, so background fan-out won’t actually run), but it is still less broken than B’s combination of compile + DI issues.\n\nOn .NET 10 idioms, A is closer: proper net10 targeting, built-in OpenAPI usage with `WithName/WithSummary/WithTags` on endpoints, minimal APIs throughout. B uses mixed package versions (EF Core 9, rate limiting package 8, OpenAPI preview), and `.RequireRateLimiting(\"fixed\")` without defining that named policy.\n\nFor background service/channels specifically, B’s design is materially better (channel handoff by delivery ID, hosted service registration, active-task tracking for graceful stop), whereas A does not actually host the worker and its drain just discards queued items. So B wins this criterion despite broader issues.\n\nFor resilience/retry, B is more aligned with the intended model by configuring a resilience pipeline in DI and recreating requests per attempt; A builds a local pipeline and may misuse retry semantics (likely wrong attempt count and retries all non-success). Neither correctly avoids retrying 4xx.\n\nFor EF/data model, A is better aligned with requirement versions and models (`Subscription`, event entity, `DeliveryAttempt` with required fields and relationships/indexes). B uses EF Core 9 instead of 10 and is weaker on cancellation propagation.\n\nCode quality/structure also favors A slightly: organized files, structured logging including event/subscription/attempt/response details, and API-layer validation for URL/type/payload size. B is structured too, but critical registration and lifecycle issues hurt practical quality.\n\nOverall, A is the better response, though neither fully satisfies the prompt end-to-end."
+}

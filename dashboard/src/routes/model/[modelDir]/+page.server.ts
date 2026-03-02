@@ -1,4 +1,4 @@
-import { getEvaluationsForTask, getLeaderboard, getModelDirs, getTaskNames } from '$lib/data.server.js';
+import { getEvaluationsForTask, getEloResults, getLeaderboard, getModelDirs, getTaskNames } from '$lib/data.server.js';
 import { dirToId } from '$lib/utils.js';
 import { error } from '@sveltejs/kit';
 import type { EntryGenerator, PageServerLoad } from './$types.js';
@@ -55,11 +55,22 @@ export const load: PageServerLoad = async ({ params }) => {
 	// Sort by task avg score descending
 	taskEvals.sort((a, b) => b.avgScore - a.avgScore);
 
+	// ELO data
+	const eloResults = getEloResults();
+	const eloEntry = eloResults?.models.find((m) => m.model === modelDir) ?? null;
+	const eloRank = eloResults ? (eloResults.models.findIndex((m) => m.model === modelDir) + 1) : 0;
+	const eloMatchups = eloResults
+		? eloResults.matchups.filter((m) => m.modelA === modelDir || m.modelB === modelDir)
+		: [];
+
 	return {
 		modelDir,
 		modelId,
 		rank,
 		leaderboardEntry: leaderboardEntry ?? null,
-		taskEvals
+		taskEvals,
+		eloEntry,
+		eloRank,
+		eloMatchups
 	};
 };

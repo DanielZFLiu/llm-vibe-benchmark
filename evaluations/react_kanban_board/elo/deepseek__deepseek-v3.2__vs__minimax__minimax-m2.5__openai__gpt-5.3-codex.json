@@ -1,0 +1,15 @@
+{
+  "judge": "openai/gpt-5.3-codex",
+  "modelA": "deepseek/deepseek-v3.2",
+  "modelB": "minimax/minimax-m2.5",
+  "winner": "B",
+  "criterionWinners": {
+    "component_architecture_and_react_patterns": "B",
+    "typescript_strictness": "B",
+    "drag_and_drop_implementation": "B",
+    "accessibility_and_keyboard_support": "B",
+    "search_filter_and_undo": "B",
+    "code_quality_and_project_setup": "B"
+  },
+  "reasoning": "Response A is the stronger submission overall. Neither response fully satisfies the prompt, but B has multiple critical breakages that make the app effectively non-functional as delivered. A has a more coherent, mostly working architecture with Board/Column/Card decomposition, reducer-driven state in context, search/filter dimming, persistence, and a plausible undo flow. B includes more custom hooks on paper, but its core state flow is broken: `useUndoHistory` returns a no-op dispatch, yet BoardContext relies on it for all actions, so board updates would not apply. B also has setup/runtime issues (missing `@vitejs/plugin-react` dependency while importing it, missing `useBoard` import in `App.tsx`, `any` usage), which seriously hurts correctness.\n\nFor drag-and-drop, A is imperfect (within-column reorder logic is weak and likely append-heavy), but B’s DnD cannot be trusted given broken dispatch pipeline. For accessibility/keyboard, both are partial; A at least includes more ARIA/live-region intent and dark-mode persistence tied to board state. For search/filter/undo, A clearly wins since B’s undo/state mutation path is fundamentally broken.\n\nSo while A misses some explicit requested structure (notably separate hooks like `useLocalStorage`, `useDragAndDrop`, `useUndoHistory`, and missing explicit `tailwind.config.ts` file in the response), it is still materially better than B on functionality and implementation integrity."
+}

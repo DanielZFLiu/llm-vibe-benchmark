@@ -1,0 +1,15 @@
+{
+  "judge": "google/gemini-3.1-pro-preview",
+  "modelA": "minimax/minimax-m2.5",
+  "modelB": "qwen/qwen3.5-397b-a17b",
+  "winner": "A",
+  "criterionWinners": {
+    "component_architecture_and_react_patterns": "A",
+    "typescript_strictness": "A",
+    "drag_and_drop_implementation": "A",
+    "accessibility_and_keyboard_support": "A",
+    "search_filter_and_undo": "A",
+    "code_quality_and_project_setup": "A"
+  },
+  "reasoning": "Response B is significantly stronger overall because it successfully implements the complex requirements that Response A either skips or leaves as broken stubs. \n\nFor Search, Filter, and Undo: Response B perfectly implements the requirement to 'dim' non-matching cards by computing a set of dimmed IDs and applying an opacity class, maintaining the DOM layout. B also implements a fully functional Undo system matching the requirements. Response A writes a comment about dimming cards but fails to actually implement it, and its Undo hook is completely disconnected from the event flow, rendering it useless.\n\nFor Drag and Drop: Response B computes insertion targets correctly, provides excellent visual feedback (a blue insertion ghost line), and updates the state seamlessly. Response A's DnD logic contains math errors when placing cards into cross-column targets.\n\nFor Accessibility: Both responses missed the mark on Alt+Arrow navigation (Response A left a placeholder comment, while Response B wrote the DOM manipulation logic but forgot to attach the onFocus event to update its active card ID). However, Response B uniquely included the required ARIA live regions for announcing filter matches and properly labeled all interactive elements.\n\nLastly, Response B's UI implementation—including markdown rendering edge-cases, overdue date coloring, and Tailwind v4 setup—is substantially more polished and production-ready."
+}

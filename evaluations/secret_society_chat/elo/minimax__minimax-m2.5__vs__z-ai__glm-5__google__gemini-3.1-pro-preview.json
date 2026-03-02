@@ -1,0 +1,15 @@
+{
+  "judge": "google/gemini-3.1-pro-preview",
+  "modelA": "minimax/minimax-m2.5",
+  "modelB": "z-ai/glm-5",
+  "winner": "B",
+  "criterionWinners": {
+    "encryption_soundness": "tie",
+    "architecture_fitness": "B",
+    "invite_system_design": "B",
+    "security_model": "B",
+    "self_hosting_practicality": "B",
+    "design_depth_and_precision": "B"
+  },
+  "reasoning": "Both responses provide robust, well-reasoned system designs based on the Signal Protocol (Double Ratchet + X3DH) and correctly identify the constraints of right-sizing for 1,000 users. Response A is the stronger submission for several reasons. First, under 'Architecture Fitness', Response A accurately recognizes that a single Go process can trivially hold 1,000 WebSockets, eliminating the need for external state stores. Response B unnecessarily introduces Redis for Socket.io/Presence, which violates the constraint of keeping the self-hosted setup as simple as possible. Second, Response A's security model demonstrates deeper insight by treating presence and typing indicators as standard encrypted message envelopes to prevent the server from distinguishing between active typing and actual message transmission, thereby reducing behavioral metadata leakage. Third, Response A appropriately hashes the invite tokens in the database, treating them like bearer tokens, whereas Response B stores them in plaintext. Both appropriately keep E2E private keys off the server and address device compromise, but A's deployment stack (Go + Postgres + Caddy) is slightly more optimal for a non-infrastructure specialist than B's stack."
+}

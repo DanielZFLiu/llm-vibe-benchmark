@@ -1,0 +1,15 @@
+{
+  "judge": "openai/gpt-5.3-codex",
+  "modelA": "moonshotai/kimi-k2.5",
+  "modelB": "qwen/qwen3.5-397b-a17b",
+  "winner": "A",
+  "criterionWinners": {
+    "correctness_and_completeness": "A",
+    "dotnet10_idioms": "A",
+    "background_service_and_channels": "A",
+    "resilience_and_retry": "A",
+    "data_model_and_ef_core": "A",
+    "code_quality_and_structure": "A"
+  },
+  "reasoning": "Response A is clearly stronger overall. Both attempt the required file structure and minimal API approach, but B has multiple likely compile/runtime blockers and requirement violations. A is not perfect (notably rate limiting is not per-IP, package versions are 9.0, and retry count semantics may be off), but its core publish -> persist -> channel -> background worker -> HTTP delivery flow is coherent and likely runnable.\n\nKey differences:\n- A wires Channel<Guid> through DI correctly between POST /events and DeliveryWorker. B creates a private channel inside the worker and then tries to inject DeliveryWorker directly into endpoints despite only registering it via AddHostedService, which is typically not resolvable as a concrete service.\n- B likely does not compile due to await inside lock blocks in StopAsync.\n- A uses Microsoft.Extensions.Http.Resilience via AddResilienceHandler on HttpClient. B mixes in Polly types/pipelines directly despite the prompt saying not Polly directly.\n- A implements all required endpoints with WithName/WithSummary/WithTags and mostly TypedResults. B uses Results everywhere and has a mismatched RequireRateLimiting(\"fixed\") without defining that named policy.\n- B stores and forwards the entire raw event request body as payload, rather than the event payload object body required for webhook delivery.\n\nSo while A has some spec misses, B has more severe correctness and idiomatic issues."
+}

@@ -1,0 +1,15 @@
+{
+  "judge": "google/gemini-3.1-pro-preview",
+  "modelA": "minimax/minimax-m2.5",
+  "modelB": "stepfun/step-3.5-flash",
+  "winner": "B",
+  "criterionWinners": {
+    "correctness_and_completeness": "B",
+    "dotnet10_idioms": "B",
+    "background_service_and_channels": "B",
+    "resilience_and_retry": "A",
+    "data_model_and_ef_core": "B",
+    "code_quality_and_structure": "B"
+  },
+  "reasoning": "Response A provides a vastly superior implementation of the application. It correctly uses .NET 10 Minimal APIs, strongly typed RFC 9457 `TypedResults.Problem` responses, proper payload byte length validation, and carefully applies the IP-based rate limiter *only* to the `POST /events` endpoint. Response A's data access and fan-out logic function properly without race conditions. Response A has one drawback: it explicitly violates the prompt's instruction against manual retry loops by using a `for` loop with `Task.Delay` instead of wiring up `Microsoft.Extensions.Http.Resilience` to its `HttpClient`. Response B technically attempts to use the required `Microsoft.Extensions.Http.Resilience` library, but does so in a fundamentally broken way: it reuses the same `HttpRequestMessage`, which natively throws an `InvalidOperationException` on the very first retry. Response B also has critical database concurrency bugs (a race condition throwing Unique Constraint violations), a horrendous hack in its worker (downcasting an injected interface to a concrete class because it forgot to include the method in the interface definition), and implements graceful shutdown by actively reading and discarding all remaining events in the channel instead of processing them."
+}

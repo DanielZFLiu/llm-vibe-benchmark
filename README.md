@@ -38,6 +38,7 @@ node dist/index.js run        # all three in sequence
 --tasks <t1,t2,...>    Only run the specified task names (comma-separated)
 --models <m1,m2,...>   Only run the specified Set C models (comma-separated, partial match)
 --force                Overwrite existing outputs instead of skipping them
+--elo                  Use ELO pairwise comparison mode (see below)
 ```
 
 Examples:
@@ -56,6 +57,15 @@ node dist/index.js run --models deepseek,qwen
 
 # Combine filters: one model, one task
 node dist/index.js run --tasks relay_webhook_api --models step-3.5
+
+# Run the full ELO pipeline
+node dist/index.js run --elo
+
+# Run only ELO evaluation (requires responses to already exist)
+node dist/index.js evaluate --elo
+
+# Print ELO leaderboard from existing comparisons
+node dist/index.js report --elo
 ```
 
 ## Dashboard
@@ -94,6 +104,21 @@ Edit `benchmark.config.json`:
 | `maxConcurrency` | `3` | Max parallel API calls |
 | `maxTokens` | `16384` | Default max output tokens per generation call — can be overridden per task in `task.json` |
 
+## ELO Mode
+
+Standard evaluation asks judges to assign absolute scores (0-100), which can suffer from score clustering and inconsistency across attempts. ELO mode uses pairwise comparison instead. Each judge compares every pair of models head to head, deciding which response is better per criterion and overall.
+
+### How It Works
+
+1. **Generate** responses as usual.
+2. **Evaluate with `--elo`** — For each task, every pair of models is compared by every judge (N*(N-1)/2 pairs per task per judge).
+3. **Report with `--elo`** — ELO ratings are computed using iterative updates (K=32, 10 convergence passes) and scaled to 0-100
+
+### Comparison Cost
+
+With N models, M judges, and T tasks: `N*(N-1)/2 * M * T` API calls.
+Example: 6 models, 3 judges, 4 tasks = 180 comparisons (vs 72 for standard evaluation).
+
 ## Output Files
 
 After running, these types of output are saved:
@@ -101,6 +126,8 @@ After running, these types of output are saved:
 - **`responses/<model>/<task>.md`** — Raw response from each competitor model.
 - **`evaluations/<task>/<model>__<judge>.json`** — Per-judge score file with reasoning and per-criterion scores.
 - **`evaluations/results.json`** — Aggregated leaderboard. Re-running `report` **merges** new results in. Newest data wins on conflict.
+- **`evaluations/<task>/elo/<modelA>__vs__<modelB>__<judge>.json`** — ELO pairwise comparison results (when using `--elo`).
+- **`evaluations/elo-results.json`** — Aggregated ELO ratings and head-to-head matchups (when using `--elo`).
 
 ## Adding Tasks
 
@@ -169,6 +196,7 @@ Add a `criteria.json` to any task folder. Optional `rubric` field anchors scorin
 
 ## Leaderboard Output
 
+### Standard Mode
 ```
 Rank  Model                   Avg Score  Std Dev   Best Task           Worst Task
 ----  -----                   ---------  -------   ---------           ----------
@@ -177,6 +205,16 @@ Rank  Model                   Avg Score  Std Dev   Best Task           Worst Tas
 ```
 
 A per-task breakdown table is also printed below the leaderboard.
+
+### ELO Mode
+```
+Rank  Model                         ELO     Score   W    L    T
+----  -----                         ---     -----   --   --   --
+#1    deepseek__deepseek-v3.2       1623    100.0   12   3    0
+#2    qwen__qwen3.5-397b-a17b       1567    77.2    10   4    1
+```
+
+Per task ELO and head to head tables are also printed.
 
 ## Testing
 

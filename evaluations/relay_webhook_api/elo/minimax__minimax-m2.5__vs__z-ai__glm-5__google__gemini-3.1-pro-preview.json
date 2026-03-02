@@ -1,0 +1,15 @@
+{
+  "judge": "google/gemini-3.1-pro-preview",
+  "modelA": "minimax/minimax-m2.5",
+  "modelB": "z-ai/glm-5",
+  "winner": "B",
+  "criterionWinners": {
+    "correctness_and_completeness": "B",
+    "dotnet10_idioms": "tie",
+    "background_service_and_channels": "B",
+    "resilience_and_retry": "B",
+    "data_model_and_ef_core": "B",
+    "code_quality_and_structure": "B"
+  },
+  "reasoning": "Response A provides a significantly more robust and accurate implementation. Its DeliveryWorker and channel utilization correctly process the exact events placed in the queue and implement genuine draining during graceful shutdown by waiting for the remaining items to process. In contrast, Response B's worker has a severe logical flaw where it ignores the channel message's IDs and just queries the DB for any pending delivery, which will lead to duplicate processing and unique constraint exceptions. Furthermore, Response B merely discards queued items during shutdown instead of draining them. For HTTP retries, Response A properly leverages the modern '.AddResilienceHandler' injected into the HttpClient, ensuring 'HttpRequestMessage' instances are properly cloned for each retry attempt. Response B manually wraps a single HttpClient.SendAsync inside a resilience pipeline, which will inevitably crash with an 'InvalidOperationException' on the first retry because standard 'HttpRequestMessage' instances cannot be sent more than once. Both responses deviated slightly on the IP-based rate limiting requirement (A applied it to the endpoint but forgot the IP partition; B applied the IP partition but did it globally across the entire app), making them tie on idioms. Overall, Response A is a fully functional, production-like implementation while B contains fatal execution errors."
+}
