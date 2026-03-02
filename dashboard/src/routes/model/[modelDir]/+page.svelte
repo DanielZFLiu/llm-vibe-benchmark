@@ -1,9 +1,11 @@
 <script lang="ts">
 	import Breadcrumb from '$lib/Breadcrumb.svelte';
-	import { fmt, formatCriterionName, formatTaskName, pct } from '$lib/utils.js';
+	import { dirToId, fmt, formatCriterionName, formatTaskName, pct } from '$lib/utils.js';
 	import type { PageData } from './$types.js';
 
 	let { data }: { data: PageData } = $props();
+
+	const hasElo = $derived(data.eloEntry != null);
 </script>
 
 <svelte:head>
@@ -44,7 +46,73 @@
 			</div>
 		</div>
 	{/if}
+
+	{#if hasElo && data.eloEntry}
+		<div class="stat-row" style="margin-top: 0.75rem">
+			<div class="stat">
+				<span class="stat-val">{data.eloEntry.elo}</span>
+				<span class="stat-label">ELO</span>
+			</div>
+			<div class="stat-divider"></div>
+			<div class="stat">
+				<span class="stat-val">#{data.eloRank}</span>
+				<span class="stat-label">ELO Rank</span>
+			</div>
+			<div class="stat-divider"></div>
+			<div class="stat">
+				<span class="stat-val">{data.eloEntry.wins}W {data.eloEntry.losses}L</span>
+				<span class="stat-label">Record</span>
+			</div>
+			<div class="stat-divider"></div>
+			<div class="stat">
+				<span class="stat-val">{fmt(data.eloEntry.scaled)}</span>
+				<span class="stat-label">Score (0–100)</span>
+			</div>
+		</div>
+	{/if}
 </header>
+
+<!-- ── Head-to-Head ───────────────────────────────────────────── -->
+{#if hasElo && data.eloMatchups.length > 0}
+	<section class="h2h-section">
+		<h2 class="section-label">Head-to-Head</h2>
+		<div class="h2h-list">
+			{#each data.eloMatchups as mu}
+				{@const isA = mu.modelA === data.modelDir}
+				{@const opponent = isA ? mu.modelB : mu.modelA}
+				{@const myWins = isA ? mu.winsA : mu.winsB}
+				{@const oppWins = isA ? mu.winsB : mu.winsA}
+				{@const result = myWins > oppWins ? 'win' : myWins < oppWins ? 'loss' : 'draw'}
+				{@const total = myWins + oppWins + mu.ties}
+				<a href="/model/{opponent}" class="h2h-row">
+					<span class="h2h-opponent">{dirToId(opponent)}</span>
+					<div class="h2h-bar-track">
+						{#if total > 0}
+							<div class="h2h-bar-win" style="width: {(myWins / total) * 100}%"></div>
+							<div class="h2h-bar-tie" style="width: {(mu.ties / total) * 100}%"></div>
+						{/if}
+					</div>
+					<span class="h2h-record {result}">{myWins}W-{oppWins}L{#if mu.ties > 0} {mu.ties}T{/if}</span>
+				</a>
+			{/each}
+		</div>
+	</section>
+{/if}
+
+<!-- ── Per-Task ELO ──────────────────────────────────────────────── -->
+{#if hasElo && data.eloEntry && Object.keys(data.eloEntry.taskElos).length > 0}
+	<section class="task-elo-section">
+		<h2 class="section-label">Per-Task ELO</h2>
+		<div class="task-elo-list">
+			{#each Object.entries(data.eloEntry.taskElos).sort((a, b) => b[1] - a[1]) as [task, elo]}
+				<a href="/task/{task}" class="task-elo-row">
+					<span class="task-elo-name">{formatTaskName(task)}</span>
+					<span class="task-elo-val">{elo}</span>
+				</a>
+			{/each}
+		</div>
+	</section>
+{/if}
 
 <!-- ── Task Evaluations ────────────────────────────────────────── -->
 <section class="tasks-section">
@@ -331,5 +399,118 @@
 
 	.judge-eval-card:hover .jec-view-hint {
 		opacity: 1;
+	}
+
+	// ── Head-to-Head ─────────────────────────────────────────────
+	.h2h-section {
+		margin-bottom: 2.5rem;
+	}
+
+	.h2h-list {
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+	}
+
+	.h2h-row {
+		display: grid;
+		grid-template-columns: minmax(140px, 200px) 1fr auto;
+		align-items: center;
+		gap: 1rem;
+		padding: 0.75rem 1.25rem;
+		background: var(--surface);
+		border: 1px solid var(--border-light);
+		border-radius: var(--radius);
+		text-decoration: none;
+		color: inherit;
+		transition: border-color 0.12s;
+
+		&:hover {
+			border-color: var(--accent-light);
+			text-decoration: none;
+		}
+	}
+
+	.h2h-opponent {
+		font-family: var(--font-mono);
+		font-size: 0.82rem;
+		font-weight: 500;
+		color: var(--text);
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	.h2h-bar-track {
+		display: flex;
+		height: 5px;
+		background: #dc2626;
+		border-radius: 3px;
+		overflow: hidden;
+		opacity: 0.7;
+	}
+
+	.h2h-bar-win {
+		height: 100%;
+		background: #16a34a;
+	}
+
+	.h2h-bar-tie {
+		height: 100%;
+		background: var(--border);
+	}
+
+	.h2h-record {
+		font-size: 0.78rem;
+		font-weight: 600;
+		font-variant-numeric: tabular-nums;
+		min-width: 5.5rem;
+		text-align: right;
+
+		&.win { color: #16a34a; }
+		&.loss { color: #dc2626; }
+		&.draw { color: var(--text-muted); }
+	}
+
+	// ── Per-Task ELO ─────────────────────────────────────────────
+	.task-elo-section {
+		margin-bottom: 2.5rem;
+	}
+
+	.task-elo-list {
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+	}
+
+	.task-elo-row {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding: 0.65rem 1.25rem;
+		background: var(--surface);
+		border: 1px solid var(--border-light);
+		border-radius: var(--radius);
+		text-decoration: none;
+		color: inherit;
+		transition: border-color 0.12s;
+
+		&:hover {
+			border-color: var(--accent-light);
+			text-decoration: none;
+		}
+	}
+
+	.task-elo-name {
+		font-size: 0.875rem;
+		font-weight: 500;
+		color: var(--text);
+	}
+
+	.task-elo-val {
+		font-size: 0.875rem;
+		font-weight: 700;
+		font-variant-numeric: tabular-nums;
+		color: var(--text);
 	}
 </style>

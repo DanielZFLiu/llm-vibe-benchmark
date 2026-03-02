@@ -10,6 +10,18 @@
 
 	let mode: 'score' | 'elo' = $state('score');
 
+	// Per-task ELO range for scaling mini-bars
+	function taskEloPct(task: string, elo: number): number {
+		if (!data.eloResults) return 0;
+		const elos = data.eloResults.models
+			.map((m) => m.taskElos[task])
+			.filter((e): e is number => e != null);
+		if (elos.length === 0) return 0;
+		const min = Math.min(...elos);
+		const max = Math.max(...elos);
+		return max > min ? ((elo - min) / (max - min)) * 100 : 50;
+	}
+
 	// Head-to-head lookup helper
 	function getMatchup(modelA: string, modelB: string): EloMatchup | null {
 		if (!data.eloResults) return null;
@@ -48,8 +60,12 @@
 	</div>
 	<h1 class="hero-title">Leaderboard</h1>
 	<p class="hero-sub">
-		Models ranked by average score across all tasks and judges.
-		Click any model to explore its responses and per-judge evaluations.
+		{#if mode === 'elo'}
+			Models ranked by pairwise ELO ratings across all tasks and judges.
+		{:else}
+			Models ranked by average score across all tasks and judges.
+		{/if}
+		Click any model to explore its evaluations.
 	</p>
 </section>
 
@@ -212,6 +228,12 @@
 									{#if entry.taskElos[task] != null}
 										<a href="/task/{task}" class="score-cell">
 											<span class="score-val">{entry.taskElos[task]}</span>
+											<div class="mini-bar">
+												<div
+													class="mini-bar-fill"
+													style="width: {pct(taskEloPct(task, entry.taskElos[task]))}%"
+												></div>
+											</div>
 										</a>
 									{:else}
 										<span class="score-na">—</span>
