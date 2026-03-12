@@ -1,10 +1,13 @@
 import { z } from "zod";
+import { MODEL_PROVIDERS } from "./llm/types.js";
 
 // --- Benchmark Config Schemas ---
 
 export const BenchmarkConfigSchema = z.object({
     setC: z.array(z.string()).min(1, "At least one competitor model required"),
     setJ: z.array(z.string()).min(1, "At least one judge model required"),
+    generationProvider: z.enum(MODEL_PROVIDERS).default("openrouter"),
+    judgeProvider: z.enum(MODEL_PROVIDERS).default("openrouter"),
     tasksDir: z.string().default("./tasks"),
     responsesDir: z.string().default("./responses"),
     evaluationsDir: z.string().default("./evaluations"),

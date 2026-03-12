@@ -12,6 +12,8 @@
     "openai/gpt-5.3-codex",
     "anthropic/claude-opus-4.6"
   ],
+  "generationProvider": "openrouter",
+  "judgeProvider": "openrouter",
   "tasksDir": "./tasks",
   "responsesDir": "./responses",
   "evaluationsDir": "./evaluations",

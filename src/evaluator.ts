@@ -1,5 +1,6 @@
 import { existsSync, readFileSync, writeFileSync, readdirSync } from "fs";
 import { resolve } from "path";
+import { chatCompletionStructured } from "./llm/index.js";
 import {
     type BenchmarkConfig,
     type Criterion,
@@ -9,7 +10,6 @@ import {
 } from "./schemas.js";
 import { loadTaskCriteria, loadTaskConfig } from "./config.js";
 import {
-    chatCompletion,
     discoverTasks,
     ensureDir,
     withRetry,
@@ -63,14 +63,47 @@ Score each criterion from 0 to 100:
 ${criteriaBlock}
 
 ## Instructions
-1. First, provide your reasoning analyzing the response against each criterion.
-2. Then, provide your scores as JSON.
+1. Provide a brief reasoning summary analyzing the response against each criterion.
+2. Provide a score from 0 to 100 for each criterion.
+3. Use the response schema exactly.
 
-Respond in EXACTLY this JSON format (no markdown fences, no extra text after the JSON):
+Expected response shape:
 {
-  "reasoning": "<your chain-of-thought analysis>",
+  "reasoning": "<brief justification>",
   "scores": { ${scoreKeys} }
 }`;
+}
+
+function buildJudgeOutputSchema(criteria: Criterion[]): Record<string, unknown> {
+    const scoreProperties = Object.fromEntries(
+        criteria.map((criterion) => [
+            criterion.name,
+            {
+                type: "number",
+                minimum: 0,
+                maximum: 100,
+                description: criterion.description,
+            },
+        ]),
+    );
+
+    return {
+        type: "object",
+        additionalProperties: false,
+        required: ["reasoning", "scores"],
+        properties: {
+            reasoning: {
+                type: "string",
+                description: "Brief justification for the assigned scores.",
+            },
+            scores: {
+                type: "object",
+                additionalProperties: false,
+                required: criteria.map((criterion) => criterion.name),
+                properties: scoreProperties,
+            },
+        },
+    };
 }
 
 export function parseJudgeResponse(
@@ -211,23 +244,32 @@ export async function evaluate(
                 criteria,
                 responseNote,
             );
+            const outputSchema = buildJudgeOutputSchema(criteria);
 
             try {
-                const judgeRaw = await withRetry(
+                const parsed = await withRetry(
                     async () => {
-                        const result = await chatCompletion(judge, [
+                        const result = await chatCompletionStructured<{
+                            reasoning: string;
+                            scores: Record<string, number>;
+                        }>(
+                            config.judgeProvider,
+                            judge,
+                            [
                             { role: "user", content: judgePrompt },
-                        ]);
-                        // Validate parse-ability inside retry loop
-                        parseJudgeResponse(result, judge);
+                            ],
+                            {
+                                name: "judge_score",
+                                description: "Judge scoring output for a benchmarked response.",
+                                schema: outputSchema,
+                            },
+                        );
                         return result;
                     },
                     3,
                     2000,
                     (msg) => progress.log(msg),
                 );
-
-                const parsed = parseJudgeResponse(judgeRaw, judge);
 
                 const judgeScore: JudgeScore = {
                     judge,

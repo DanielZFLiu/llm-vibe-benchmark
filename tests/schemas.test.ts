@@ -13,6 +13,8 @@ describe("BenchmarkConfigSchema", () => {
         const result = BenchmarkConfigSchema.safeParse({
             setC: ["openai/gpt-5.2"],
             setJ: ["openai/gpt-5.3-codex"],
+            generationProvider: "openrouter",
+            judgeProvider: "ollama",
             tasksDir: "./tasks",
             responsesDir: "./responses",
             evaluationsDir: "./evaluations",
@@ -30,6 +32,8 @@ describe("BenchmarkConfigSchema", () => {
         expect(result.responsesDir).toBe("./responses");
         expect(result.evaluationsDir).toBe("./evaluations");
         expect(result.maxConcurrency).toBe(3);
+        expect(result.generationProvider).toBe("openrouter");
+        expect(result.judgeProvider).toBe("openrouter");
     });
 
     it("rejects empty setC", () => {
@@ -69,6 +73,15 @@ describe("BenchmarkConfigSchema", () => {
             setC: ["model"],
             setJ: ["judge"],
             maxConcurrency: 2.5,
+        });
+        expect(result.success).toBe(false);
+    });
+
+    it("rejects unknown providers", () => {
+        const result = BenchmarkConfigSchema.safeParse({
+            setC: ["model"],
+            setJ: ["judge"],
+            generationProvider: "unknown",
         });
         expect(result.success).toBe(false);
     });

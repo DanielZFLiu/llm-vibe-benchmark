@@ -1,5 +1,6 @@
 import { existsSync, readFileSync, writeFileSync, readdirSync } from "fs";
 import { resolve } from "path";
+import { chatCompletionStructured } from "./llm/index.js";
 import {
     type BenchmarkConfig,
     type Criterion,
@@ -9,7 +10,6 @@ import {
 } from "./schemas.js";
 import { loadTaskCriteria, loadTaskConfig } from "./config.js";
 import {
-    chatCompletion,
     discoverTasks,
     ensureDir,
     withRetry,
@@ -65,12 +65,47 @@ ${criteriaBlock}
 3. Determine the overall winner based on your analysis.
 4. Be decisive — only call a tie when the responses are genuinely equal on a criterion.
 
-Respond in EXACTLY this JSON format (no markdown fences, no extra text after the JSON):
+Expected response shape:
 {
-  "reasoning": "<your comparative analysis of both responses>",
+  "reasoning": "<brief comparative justification>",
   "winner": "<A or B or tie>",
   "criteria": { ${criteriaKeys} }
 }`;
+}
+
+function buildComparisonOutputSchema(criteria: Criterion[]): Record<string, unknown> {
+    const criterionProperties = Object.fromEntries(
+        criteria.map((criterion) => [
+            criterion.name,
+            {
+                type: "string",
+                enum: ["A", "B", "tie"],
+                description: criterion.description,
+            },
+        ]),
+    );
+
+    return {
+        type: "object",
+        additionalProperties: false,
+        required: ["reasoning", "winner", "criteria"],
+        properties: {
+            reasoning: {
+                type: "string",
+                description: "Brief comparative justification for the verdict.",
+            },
+            winner: {
+                type: "string",
+                enum: ["A", "B", "tie"],
+            },
+            criteria: {
+                type: "object",
+                additionalProperties: false,
+                required: criteria.map((criterion) => criterion.name),
+                properties: criterionProperties,
+            },
+        },
+    };
 }
 
 export function parseComparisonResponse(
@@ -256,22 +291,33 @@ export async function eloEvaluate(
                 criteria,
                 responseNote,
             );
+            const outputSchema = buildComparisonOutputSchema(criteria);
 
             try {
-                const judgeRaw = await withRetry(
+                const parsed = await withRetry(
                     async () => {
-                        const result = await chatCompletion(judge, [
-                            { role: "user", content: prompt },
-                        ]);
-                        parseComparisonResponse(result);
+                        const result = await chatCompletionStructured<{
+                            reasoning: string;
+                            winner: "A" | "B" | "tie";
+                            criteria: Record<string, "A" | "B" | "tie">;
+                        }>(
+                            config.judgeProvider,
+                            judge,
+                            [
+                                { role: "user", content: prompt },
+                            ],
+                            {
+                                name: "judge_comparison",
+                                description: "Pairwise judge comparison output for two benchmarked responses.",
+                                schema: outputSchema,
+                            },
+                        );
                         return result;
                     },
                     3,
                     2000,
                     (msg) => progress.log(msg),
                 );
-
-                const parsed = parseComparisonResponse(judgeRaw);
 
                 // Un-swap: translate the judge's verdict back to the real models
                 let realWinner: "A" | "B" | "tie" = parsed.winner;

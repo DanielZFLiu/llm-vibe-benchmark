@@ -3,7 +3,14 @@ import { mkdirSync, writeFileSync, rmSync } from "fs";
 import { resolve } from "path";
 import { tmpdir } from "os";
 import { randomUUID } from "crypto";
-import { loadConfig, getApiKey, loadTaskCriteria, loadTaskConfig } from "../src/config.js";
+import {
+    loadConfig,
+    getApiKey,
+    getOpenRouterApiKey,
+    getOllamaBaseUrl,
+    loadTaskCriteria,
+    loadTaskConfig,
+} from "../src/config.js";
 
 function makeTempDir(): string {
     const dir = resolve(tmpdir(), `vibe-test-${randomUUID()}`);
@@ -53,6 +60,24 @@ describe("loadConfig", () => {
         expect(result.responsesDir).toBe("./responses");
         expect(result.evaluationsDir).toBe("./evaluations");
         expect(result.maxConcurrency).toBe(3);
+        expect(result.generationProvider).toBe("openrouter");
+        expect(result.judgeProvider).toBe("openrouter");
+    });
+
+    it("loads explicit generation and judge providers", () => {
+        writeFileSync(
+            resolve(tempDir, "benchmark.config.json"),
+            JSON.stringify({
+                setC: ["m"],
+                setJ: ["j"],
+                generationProvider: "openrouter",
+                judgeProvider: "ollama",
+            }),
+        );
+
+        const result = loadConfig(tempDir);
+        expect(result.generationProvider).toBe("openrouter");
+        expect(result.judgeProvider).toBe("ollama");
     });
 
     it("throws if config file does not exist", () => {
@@ -78,12 +103,19 @@ describe("loadConfig", () => {
 
 describe("getApiKey", () => {
     const originalEnv = process.env.OPENROUTER_API_KEY;
+    const originalOllamaBaseUrl = process.env.OLLAMA_BASE_URL;
 
     afterEach(() => {
         if (originalEnv !== undefined) {
             process.env.OPENROUTER_API_KEY = originalEnv;
         } else {
             delete process.env.OPENROUTER_API_KEY;
+        }
+
+        if (originalOllamaBaseUrl !== undefined) {
+            process.env.OLLAMA_BASE_URL = originalOllamaBaseUrl;
+        } else {
+            delete process.env.OLLAMA_BASE_URL;
         }
     });
 
@@ -92,9 +124,24 @@ describe("getApiKey", () => {
         expect(getApiKey()).toBe("test-key-123");
     });
 
+    it("returns the OpenRouter API key from env", () => {
+        process.env.OPENROUTER_API_KEY = "test-key-123";
+        expect(getOpenRouterApiKey()).toBe("test-key-123");
+    });
+
     it("throws if OPENROUTER_API_KEY is not set", () => {
         delete process.env.OPENROUTER_API_KEY;
         expect(() => getApiKey()).toThrow("OPENROUTER_API_KEY");
+    });
+
+    it("returns the default Ollama base URL when env is not set", () => {
+        delete process.env.OLLAMA_BASE_URL;
+        expect(getOllamaBaseUrl()).toBe("http://127.0.0.1:11434");
+    });
+
+    it("returns the Ollama base URL from env", () => {
+        process.env.OLLAMA_BASE_URL = "http://localhost:11434";
+        expect(getOllamaBaseUrl()).toBe("http://localhost:11434");
     });
 });
 

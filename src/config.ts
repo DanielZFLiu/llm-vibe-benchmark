@@ -11,6 +11,7 @@ import {
 } from "./schemas.js";
 
 const CONFIG_FILENAME = "benchmark.config.json";
+const DEFAULT_OLLAMA_BASE_URL = "http://127.0.0.1:11434";
 
 export function loadConfig(rootDir: string): BenchmarkConfig {
     const configPath = resolve(rootDir, CONFIG_FILENAME);
@@ -31,7 +32,7 @@ export function loadConfig(rootDir: string): BenchmarkConfig {
     return result.data;
 }
 
-export function getApiKey(): string {
+export function getOpenRouterApiKey(): string {
     const key = process.env.OPENROUTER_API_KEY;
     if (!key) {
         throw new Error(
@@ -39,6 +40,14 @@ export function getApiKey(): string {
         );
     }
     return key;
+}
+
+export function getApiKey(): string {
+    return getOpenRouterApiKey();
+}
+
+export function getOllamaBaseUrl(): string {
+    return process.env.OLLAMA_BASE_URL?.trim() || DEFAULT_OLLAMA_BASE_URL;
 }
 
 export function loadTaskCriteria(taskDir: string): Criterion[] {

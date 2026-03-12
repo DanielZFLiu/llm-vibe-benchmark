@@ -1,9 +1,9 @@
 import { existsSync, writeFileSync } from "fs";
 import { resolve } from "path";
+import { chatCompletion, type ChatMessage } from "./llm/index.js";
 import { type BenchmarkConfig, type RunOptions } from "./schemas.js";
 import { loadTaskConfig } from "./config.js";
 import {
-    chatCompletion,
     discoverTasks,
     readPrompt,
     ensureDir,
@@ -85,7 +85,7 @@ export async function generate(
             const taskConfig = loadTaskConfig(resolve(tasksDir, task));
             const effectiveMaxTokens =
                 taskConfig?.maxTokens ?? config.maxTokens;
-            const messages: { role: "system" | "user"; content: string }[] = [];
+            const messages: ChatMessage[] = [];
             if (taskConfig?.systemPrompt) {
                 messages.push({
                     role: "system",
@@ -96,7 +96,12 @@ export async function generate(
 
             try {
                 const response = await withRetry(
-                    () => chatCompletion(model, messages, effectiveMaxTokens),
+                    () => chatCompletion(
+                        config.generationProvider,
+                        model,
+                        messages,
+                        effectiveMaxTokens,
+                    ),
                     3,
                     2000,
                     (msg) => progress.log(msg),

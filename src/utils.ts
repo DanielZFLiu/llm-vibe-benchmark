@@ -1,44 +1,5 @@
-import { OpenRouter } from "@openrouter/sdk";
 import { mkdirSync, existsSync, readdirSync, readFileSync } from "fs";
 import { resolve } from "path";
-import { getApiKey } from "./config.js";
-
-let clientInstance: OpenRouter | null = null;
-
-export function getClient(): OpenRouter {
-    if (!clientInstance) {
-        clientInstance = new OpenRouter({
-            apiKey: getApiKey(),
-        });
-    }
-    return clientInstance;
-}
-
-export async function chatCompletion(
-    model: string,
-    messages: { role: "system" | "user" | "assistant"; content: string }[],
-    maxTokens?: number,
-): Promise<string> {
-    const client = getClient();
-    const completion = await client.chat.send({
-        model,
-        messages,
-        stream: false,
-        ...(maxTokens !== undefined && { max_tokens: maxTokens }),
-    });
-    const raw = completion.choices[0]?.message?.content;
-    if (!raw) {
-        throw new Error(`Empty response from ${model}`);
-    }
-    const content =
-        typeof raw === "string"
-            ? raw
-            : raw.map((item) => ("text" in item ? item.text : "")).join("");
-    if (!content) {
-        throw new Error(`Empty response from ${model}`);
-    }
-    return content;
-}
 
 export function ensureDir(dirPath: string): void {
     if (!existsSync(dirPath)) {
